@@ -1,6 +1,43 @@
 # oho - OpenCode CLI
 
+> 让 OpenCode 成为可被其他 AI 调用和监督的命令行工具
+
+[![GitHub Stars](https://img.shields.io/github/stars/tornado404/opencode_cli?style=flat-square)](https://github.com/tornado404/opencode_cli/stargazers)
+[![License](https://img.shields.io/badge/license-GPLv3-blue?style=flat-square)](LICENSE)
+
 oho 是 OpenCode Server 的命令行客户端工具，提供对 OpenCode Server API 的完整访问。
+
+## 项目定位
+
+### 独特价值
+
+**oho** 是 [OpenCode 生态系统](https://opencode.ai/docs/zh-cn/ecosystem/) 中 **唯一一个完全基于 Bash 实现的命令行客户端**。
+
+> "oho 在 Bash 中可调用" 代表着强大的扩展性和兼容性 —— 这是本项目独一无二的定位。
+
+### 设计目标
+
+让 OpenCode 更好地被其他 AI 调用和监督：
+
+- 🤖 被任何 AI Agent 天然调用
+- 🔄 集成到自动化工作流
+- 📦 在 CI/CD 管道中运行
+- 🔗 与其他 shell 工具无缝组合
+
+### 独特的 Linux 能力
+
+在 Linux 环境中，oho 可以做到 OpenCode CLI 暂时不具备的功能：
+
+| 功能 | 说明 |
+|------|------|
+| 📁 指定目录创建 Session | 在任意目录启动 AI 编程会话 |
+| 💬 基于 Session 继续发消息 | 接续之前的会话上下文 |
+| 🗑️ 销毁 Session | 完整管理会话生命周期 |
+| 🔄 会话分叉与回退 | 实验性开发轻松切换 |
+
+## 界面预览
+
+![oho CLI](assets/oho_cli.png)
 
 ## 功能特性
 
@@ -20,7 +57,7 @@ oho 是 OpenCode Server 的命令行客户端工具，提供对 OpenCode Server 
 
 ```bash
 # 克隆仓库
-git clone https://github.com/anomalyco/opencode_cli.git
+git clone https://github.com/tornado404/opencode_cli.git
 cd opencode_cli/oho
 
 # 编译
@@ -62,11 +99,20 @@ oho session list
 # 创建新会话
 oho session create
 
+# 在指定目录创建会话
+oho session create --path /your/project
+
 # 发送消息
 oho message add -s <session-id> "你好，请帮我分析这个项目"
 
+# 继续已有会话
+oho message add -s <session-id> "继续刚才的任务"
+
 # 查看消息列表
 oho message list -s <session-id>
+
+# 销毁会话
+oho session delete <session-id>
 
 # 获取配置
 oho config get
@@ -74,6 +120,17 @@ oho config get
 # 列出提供商
 oho provider list
 ```
+
+## 与其他生态项目对比
+
+| 特性 | oho | 其他生态项目 |
+|------|-----|-------------|
+| 实现语言 | Bash | TypeScript/Python/Go |
+| AI 可调用 | ✅ 天然支持 | 需要额外适配 |
+| 跨平台 | Linux/Mac/Windows | 依赖运行时 |
+| 集成难度 | ⭐⭐⭐⭐⭐ 极低 | ⭐⭐⭐ 中等 |
+
+参考：[OpenCode 生态系统中的其他项目](https://opencode.ai/docs/zh-cn/ecosystem/)
 
 ## 命令参考
 
@@ -99,6 +156,7 @@ oho instance dispose       # 销毁当前实例
 ```bash
 oho session list                      # 列出所有会话
 oho session create                    # 创建新会话
+oho session create --path /path        # 在指定目录创建会话
 oho session status                    # 获取所有会话状态
 oho session get <id>                  # 获取会话详情
 oho session delete <id>               # 删除会话
@@ -261,7 +319,13 @@ oho/
 
 ## 许可证
 
-MIT License
+GPL v3 License - 详见项目根目录 [LICENSE](../LICENSE)
+
+## 参考资源
+
+- [OpenCode 官方文档](https://opencode.ai/docs/zh-cn/)
+- [OpenCode 生态系统](https://opencode.ai/docs/zh-cn/ecosystem/)
+- [OpenCode GitHub](https://github.com/anomalyco/opencode)
 
 ## 贡献
 
