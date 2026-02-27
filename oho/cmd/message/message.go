@@ -117,7 +117,7 @@ var addCmd = &cobra.Command{
 		parts := []types.Part{
 			{
 				Type: "text",
-				Data: args[0],
+				Text: args[0],
 			},
 		}
 
@@ -153,10 +153,10 @@ var addCmd = &cobra.Command{
 		
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
-			if text, ok := part.Data.(string); ok {
+			if text, ok := part.Text.(string); ok {
 				fmt.Printf("%s\n", text)
 			} else {
-				data, _ := json.MarshalIndent(part.Data, "", "  ")
+				data, _ := json.MarshalIndent(part.Text, "", "  ")
 				fmt.Printf("%s\n", string(data))
 			}
 		}
@@ -224,7 +224,7 @@ var promptAsyncCmd = &cobra.Command{
 		parts := []types.Part{
 			{
 				Type: "text",
-				Data: args[0],
+				Text: args[0],
 			},
 		}
 
@@ -297,7 +297,7 @@ var commandCmd = &cobra.Command{
 		
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
-			if text, ok := part.Data.(string); ok {
+			if text, ok := part.Text.(string); ok {
 				fmt.Printf("%s\n", text)
 			}
 		}
@@ -351,7 +351,7 @@ var shellCmd = &cobra.Command{
 		
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
-			if text, ok := part.Data.(string); ok {
+			if text, ok := part.Text.(string); ok {
 				fmt.Printf("%s\n", text)
 			}
 		}
