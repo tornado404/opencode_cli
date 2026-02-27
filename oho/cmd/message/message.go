@@ -136,6 +136,12 @@ var addCmd = &cobra.Command{
 			return err
 		}
 
+		// 服务器返回空响应时处理
+		if len(resp) == 0 {
+			fmt.Println("消息已发送")
+			return nil
+		}
+
 		var result types.MessageWithParts
 		if err := json.Unmarshal(resp, &result); err != nil {
 			return err
