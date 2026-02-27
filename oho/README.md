@@ -1,251 +1,251 @@
 # oho - OpenCode CLI
 
-> 让 OpenCode 成为可被其他 AI 调用和监督的命令行工具
+> Make OpenCode a command-line tool that can be invoked and supervised by other AI
 
 [![GitHub Stars](https://img.shields.io/github/stars/tornado404/opencode_cli?style=flat-square)](https://github.com/tornado404/opencode_cli/stargazers)
 [![License](https://img.shields.io/badge/license-GPLv3-blue?style=flat-square)](LICENSE)
 
-oho 是 OpenCode Server 的命令行客户端工具，提供对 OpenCode Server API 的完整访问。
+oho is the command-line client tool for OpenCode Server, providing complete access to the OpenCode Server API.
 
-## 项目定位
+## Project Positioning
 
-### 独特价值
+### Unique Value
 
-**oho** 是 [OpenCode 生态系统](https://opencode.ai/docs/zh-cn/ecosystem/) 中 **唯一一个完全基于 Bash 实现的命令行客户端**。
+**oho** is the **only command-line client implemented entirely in Bash** within the [OpenCode Ecosystem](https://opencode.ai/docs/ecosystem/).
 
-> "oho 在 Bash 中可调用" 代表着强大的扩展性和兼容性 —— 这是本项目独一无二的定位。
+> "oho is callable from Bash" represents powerful extensibility and compatibility — this is the project's unique positioning.
 
-### 设计目标
+### Design Goals
 
-让 OpenCode 更好地被其他 AI 调用和监督：
+Make OpenCode more accessible for invocation and supervision by other AI:
 
-- 🤖 被任何 AI Agent 天然调用
-- 🔄 集成到自动化工作流
-- 📦 在 CI/CD 管道中运行
-- 🔗 与其他 shell 工具无缝组合
+- 🤖 Natively callable by any AI Agent
+- 🔄 Integrated into automated workflows
+- 📦 Run in CI/CD pipelines
+- 🔗 Seamlessly combined with other shell tools
 
-### 独特的 Linux 能力
+### Unique Linux Capabilities
 
-在 Linux 环境中，oho 可以做到 OpenCode CLI 暂时不具备的功能：
+In Linux environments, oho can provide capabilities that OpenCode CLI doesn't currently support:
 
-| 功能 | 说明 |
-|------|------|
-| 📁 指定目录创建 Session | 在任意目录启动 AI 编程会话 |
-| 💬 基于 Session 继续发消息 | 接续之前的会话上下文 |
-| 🗑️ 销毁 Session | 完整管理会话生命周期 |
-| 🔄 会话分叉与回退 | 实验性开发轻松切换 |
+| Feature | Description |
+|---------|-------------|
+| 📁 Create Session in Specified Directory | Start AI programming sessions in any directory |
+| 💬 Continue Sending Messages Based on Session | Resume previous session context |
+| 🗑️ Destroy Session | Complete lifecycle management for sessions |
+| 🔄 Session Fork and Revert | Easy switching for experimental development |
 
-## 界面预览
+## Interface Preview
 
 ![oho CLI](assets/oho_cli.png)
 
-## 功能特性
+## Features
 
-- ✅ 完整的 API 映射封装
-- ✅ 支持 HTTP Basic Auth 认证
-- ✅ JSON/文本双输出模式
-- ✅ 配置文件和环境变量支持
-- ✅ 所有会话管理操作
-- ✅ 消息发送和管理
-- ✅ 文件和符号查找
-- ✅ TUI 界面控制
-- ✅ MCP/LSP/格式化器状态管理
+- ✅ Complete API mapping and封装
+- ✅ HTTP Basic Auth authentication support
+- ✅ JSON/Text dual output mode
+- ✅ Configuration file and environment variable support
+- ✅ All session management operations
+- ✅ Message sending and management
+- ✅ File and symbol lookup
+- ✅ TUI interface control
+- ✅ MCP/LSP/Formatter status management
 
-## 安装
+## Installation
 
-### 从源码编译
+### Build from Source
 
 ```bash
-# 克隆仓库
+# Clone the repository
 git clone https://github.com/tornado404/opencode_cli.git
 cd opencode_cli/oho
 
-# 编译
+# Build
 make build
 
-# 或编译 Linux 版本
+# Or build Linux version
 make build-linux
 ```
 
-### 依赖
+### Dependencies
 
 - Go 1.21+
-- Cobra CLI 框架
-- 标准库 net/http
+- Cobra CLI framework
+- Standard library net/http
 
-## 快速开始
+## Quick Start
 
-### 1. 配置服务器连接
+### 1. Configure Server Connection
 
 ```bash
-# 使用环境变量
+# Using environment variables
 export OPENCODE_SERVER_HOST=127.0.0.1
 export OPENCODE_SERVER_PORT=4096
 export OPENCODE_SERVER_PASSWORD=your-password
 
-# 或使用命令行标志
+# Or use command-line flags
 oho --host 127.0.0.1 --port 4096 --password your-password session list
 ```
 
-### 2. 基本用法
+### 2. Basic Usage
 
 ```bash
-# 检查服务器状态
+# Check server health
 oho global health
 
-# 列出所有会话
+# List all sessions
 oho session list
 
-# 创建新会话
+# Create a new session
 oho session create
 
-# 在指定目录创建会话
+# Create session in specified directory
 oho session create --path /your/project
 
-# 发送消息
-oho message add -s <session-id> "你好，请帮我分析这个项目"
+# Send a message
+oho message add -s <session-id> "Hello, please help me analyze this project"
 
-# 继续已有会话
-oho message add -s <session-id> "继续刚才的任务"
+# Continue existing session
+oho message add -s <session-id> "Continue the previous task"
 
-# 查看消息列表
+# View message list
 oho message list -s <session-id>
 
-# 销毁会话
+# Destroy session
 oho session delete <session-id>
 
-# 获取配置
+# Get configuration
 oho config get
 
-# 列出提供商
+# List providers
 oho provider list
 ```
 
-## 与其他生态项目对比
+## Comparison with Other Ecosystem Projects
 
-| 特性 | oho | 其他生态项目 |
-|------|-----|-------------|
-| 实现语言 | Bash | TypeScript/Python/Go |
-| AI 可调用 | ✅ 天然支持 | 需要额外适配 |
-| 跨平台 | Linux/Mac/Windows | 依赖运行时 |
-| 集成难度 | ⭐⭐⭐⭐⭐ 极低 | ⭐⭐⭐ 中等 |
+| Feature | oho | Other Ecosystem Projects |
+|---------|-----|-------------------------|
+| Implementation Language | Bash | TypeScript/Python/Go |
+| AI Callable | ✅ Native support | Requires additional adaptation |
+| Cross-platform | Linux/Mac/Windows | Runtime dependent |
+| Integration Difficulty | ⭐⭐⭐⭐⭐ Extremely Low | ⭐⭐⭐ Medium |
 
-参考：[OpenCode 生态系统中的其他项目](https://opencode.ai/docs/zh-cn/ecosystem/)
+Reference: [Other Projects in OpenCode Ecosystem](https://opencode.ai/docs/ecosystem/)
 
-## 命令参考
+## Command Reference
 
-### 全局命令
-
-```bash
-oho global health          # 检查服务器健康状态
-oho global event           # 监听全局事件流 (SSE)
-```
-
-### 项目管理
+### Global Commands
 
 ```bash
-oho project list           # 列出所有项目
-oho project current        # 获取当前项目
-oho path                   # 获取当前路径
-oho vcs                    # 获取 VCS 信息
-oho instance dispose       # 销毁当前实例
+oho global health          # Check server health status
+oho global event           # Listen to global event stream (SSE)
 ```
 
-### 会话管理
+### Project Management
 
 ```bash
-oho session list                      # 列出所有会话
-oho session create                    # 创建新会话
-oho session create --path /path        # 在指定目录创建会话
-oho session status                    # 获取所有会话状态
-oho session get <id>                  # 获取会话详情
-oho session delete <id>               # 删除会话
-oho session update <id> --title "新标题"  # 更新会话
-oho session children <id>             # 获取子会话
-oho session todo <id>                 # 获取待办事项
-oho session fork <id>                 # 分叉会话
-oho session abort <id>                # 中止会话
-oho session share <id>                # 分享会话
-oho session unshare <id>              # 取消分享
-oho session diff <id>                 # 获取文件差异
-oho session summarize <id>            # 总结会话
-oho session revert <id> --message <msg-id>  # 回退消息
-oho session unrevert <id>             # 恢复回退
-oho session permissions <id> <perm-id> --response allow  # 响应权限
+oho project list           # List all projects
+oho project current        # Get current project
+oho path                   # Get current path
+oho vcs                    # Get VCS information
+oho instance dispose       # Dispose current instance
 ```
 
-### 消息管理
+### Session Management
 
 ```bash
-oho message list -s <session>         # 列出消息
-oho message add -s <session> "内容"   # 发送消息
-oho message get -s <session> <msg-id> # 获取消息详情
-oho message prompt-async -s <session> "内容"  # 异步发送
-oho message command -s <session> /help  # 执行命令
-oho message shell -s <session> --agent default "ls -la"  # 运行 shell
+oho session list                      # List all sessions
+oho session create                    # Create new session
+oho session create --path /path        # Create session in specified directory
+oho session status                    # Get all session statuses
+oho session get <id>                  # Get session details
+oho session delete <id>               # Delete session
+oho session update <id> --title "New Title"  # Update session
+oho session children <id>             # Get child sessions
+oho session todo <id>                 # Get todo items
+oho session fork <id>                 # Fork session
+oho session abort <id>                # Abort session
+oho session share <id>                # Share session
+oho session unshare <id>              # Unshare session
+oho session diff <id>                 # Get file diff
+oho session summarize <id>            # Summarize session
+oho session revert <id> --message <msg-id>  # Revert message
+oho session unrevert <id>             # Undo revert
+oho session permissions <id> <perm-id> --response allow  # Respond to permission
 ```
 
-### 配置管理
+### Message Management
 
 ```bash
-oho config get                      # 获取配置
-oho config set --theme dark         # 更新配置
-oho config providers                # 列出提供商和默认模型
+oho message list -s <session>         # List messages
+oho message add -s <session> "content"   # Send message
+oho message get -s <session> <msg-id> # Get message details
+oho message prompt-async -s <session> "content"  # Send async
+oho message command -s <session> /help  # Execute command
+oho message shell -s <session> --agent default "ls -la"  # Run shell
 ```
 
-### 提供商管理
+### Configuration Management
 
 ```bash
-oho provider list                   # 列出所有提供商
-oho provider auth                   # 获取认证方式
-oho provider oauth authorize <id>   # OAuth 授权
-oho provider oauth callback <id>    # 处理回调
+oho config get                      # Get configuration
+oho config set --theme dark         # Update configuration
+oho config providers                # List providers and default models
 ```
 
-### 文件操作
+### Provider Management
 
 ```bash
-oho file list [path]                # 列出文件
-oho file content <path>             # 读取文件内容
-oho file status                     # 获取文件状态
+oho provider list                   # List all providers
+oho provider auth                   # Get authentication methods
+oho provider oauth authorize <id>   # OAuth authorize
+oho provider oauth callback <id>    # Handle callback
 ```
 
-### 查找功能
+### File Operations
 
 ```bash
-oho find text "pattern"             # 搜索文本
-oho find file "query"               # 查找文件
-oho find symbol "query"             # 查找符号
+oho file list [path]                # List files
+oho file content <path>             # Read file content
+oho file status                     # Get file status
 ```
 
-### 其他命令
+### Find Features
 
 ```bash
-oho agent list                      # 列出代理
-oho command list                    # 列出命令
-oho tool ids                        # 列出工具 ID
-oho tool list --provider xxx --model xxx  # 列出工具
-oho lsp status                      # LSP 状态
-oho formatter status                # 格式化器状态
-oho mcp list                        # MCP 服务器列表
-oho mcp add <name> --config '{}'    # 添加 MCP 服务器
-oho tui open-help                   # 打开帮助
-oho tui show-toast --message "提示"  # 显示提示
-oho auth set <provider> --credentials key=value  # 设置认证
+oho find text "pattern"             # Search text
+oho find file "query"               # Find files
+oho find symbol "query"             # Find symbols
 ```
 
-## 输出格式
+### Other Commands
 
-使用 `-j` 或 `--json` 标志以 JSON 格式输出：
+```bash
+oho agent list                      # List agents
+oho command list                    # List commands
+oho tool ids                        # List tool IDs
+oho tool list --provider xxx --model xxx  # List tools
+oho lsp status                      # LSP status
+oho formatter status                # Formatter status
+oho mcp list                        # List MCP servers
+oho mcp add <name> --config '{}'    # Add MCP server
+oho tui open-help                   # Open help
+oho tui show-toast --message "message"  # Show toast
+oho auth set <provider> --credentials key=value  # Set authentication
+```
+
+## Output Format
+
+Use `-j` or `--json` flags for JSON output:
 
 ```bash
 oho session list -j
 oho config get --json
 ```
 
-## 配置文件
+## Configuration File
 
-配置文件位于 `~/.config/oho/config.json`：
+Configuration file is located at `~/.config/oho/config.json`:
 
 ```json
 {
@@ -257,40 +257,40 @@ oho config get --json
 }
 ```
 
-## 环境变量
+## Environment Variables
 
-| 变量名 | 描述 | 默认值 |
-|--------|------|--------|
-| `OPENCODE_SERVER_HOST` | 服务器主机 | `127.0.0.1` |
-| `OPENCODE_SERVER_PORT` | 服务器端口 | `4096` |
-| `OPENCODE_SERVER_USERNAME` | 用户名 | `opencode` |
-| `OPENCODE_SERVER_PASSWORD` | 密码 | 空 |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OPENCODE_SERVER_HOST` | Server host | `127.0.0.1` |
+| `OPENCODE_SERVER_PORT` | Server port | `4096` |
+| `OPENCODE_SERVER_USERNAME` | Username | `opencode` |
+| `OPENCODE_SERVER_PASSWORD` | Password | empty |
 
-## 开发
+## Development
 
 ```bash
-# 运行
+# Run
 go run ./cmd/oho --help
 
-# 测试
+# Test
 go test ./...
 
-# 格式化
+# Format
 go fmt ./...
 
-# 清理
+# Clean
 make clean
 ```
 
-## 项目结构
+## Project Structure
 
 ```
 oho/
 ├── cmd/
 │   └── oho/
-│       ├── main.go           # 入口文件
-│       ├── root.go           # 根命令
-│       ├── cmd/              # 子命令
+│       ├── main.go           # Entry file
+│       ├── root.go           # Root command
+│       ├── cmd/              # Subcommands
 │       │   ├── global/
 │       │   ├── project/
 │       │   ├── session/
@@ -308,25 +308,25 @@ oho/
 │       │   ├── tui/
 │       │   └── auth/
 │       └── internal/
-│           ├── client/       # HTTP 客户端
-│           ├── config/       # 配置管理
-│           ├── types/        # 类型定义
-│           └── util/         # 工具函数
+│           ├── client/       # HTTP client
+│           ├── config/       # Configuration management
+│           ├── types/        # Type definitions
+│           └── util/         # Utility functions
 ├── Makefile
 ├── build.sh
 └── README.md
 ```
 
-## 许可证
+## License
 
-GPL v3 License - 详见项目根目录 [LICENSE](../LICENSE)
+GPL v3 License - See project root [LICENSE](../LICENSE)
 
-## 参考资源
+## References
 
-- [OpenCode 官方文档](https://opencode.ai/docs/zh-cn/)
-- [OpenCode 生态系统](https://opencode.ai/docs/zh-cn/ecosystem/)
+- [OpenCode Official Documentation](https://opencode.ai/docs/)
+- [OpenCode Ecosystem](https://opencode.ai/docs/ecosystem/)
 - [OpenCode GitHub](https://github.com/anomalyco/opencode)
 
-## 贡献
+## Contributing
 
-欢迎提交 Issue 和 Pull Request！
+Issues and Pull Requests are welcome!
