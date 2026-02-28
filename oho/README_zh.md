@@ -50,6 +50,7 @@ oho 是 OpenCode Server 的命令行客户端工具，提供对 OpenCode Server 
 - ✅ 文件和符号查找
 - ✅ TUI 界面控制
 - ✅ MCP/LSP/格式化器状态管理
+- 📊 **[API 完成情况](./COMPLETION.md)** - 查看实现覆盖率
 
 ## 安装
 
