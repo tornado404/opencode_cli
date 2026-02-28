@@ -3,8 +3,6 @@ package session
 import (
 	"context"
 	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -19,7 +17,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("OPENCODE_SERVER_PORT", "4096")
 	os.Setenv("OPENCODE_SERVER_USERNAME", "opencode")
 	os.Setenv("OPENCODE_SERVER_PASSWORD", "test")
-	config.Init()
+	_ = config.Init()
 
 	m.Run()
 }
@@ -455,10 +453,4 @@ func TestSessionPermissionsCmd(t *testing.T) {
 	}
 }
 
-func createTestServer(handlers map[string]http.HandlerFunc) *httptest.Server {
-	mux := http.NewServeMux()
-	for path, handler := range handlers {
-		mux.Handle(path, handler)
-	}
-	return httptest.NewServer(mux)
-}
+

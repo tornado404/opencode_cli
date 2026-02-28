@@ -276,7 +276,7 @@ func MockBoolResponse(b bool) []byte {
 func ErrorHandler(statusCode int, message string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(statusCode)
-		w.Write([]byte(message))
+		_, _ = w.Write([]byte(message))
 	}
 }
 
@@ -284,7 +284,7 @@ func ErrorHandler(statusCode int, message string) http.HandlerFunc {
 func JSONHandler(v interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(v)
+		_ = json.NewEncoder(w).Encode(v)
 	}
 }
 

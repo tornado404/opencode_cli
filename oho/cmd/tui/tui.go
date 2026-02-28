@@ -23,7 +23,7 @@ var (
 	message   string
 	variant   string
 	command   string
-	controlID string
+	// controlID string // unused
 	body      string
 
 	appendPromptCmd = &cobra.Command{
@@ -325,11 +325,11 @@ func init() {
 	showToastCmd.Flags().StringVar(&title, "title", "", "消息标题")
 	showToastCmd.Flags().StringVar(&message, "message", "", "消息内容")
 	showToastCmd.Flags().StringVar(&variant, "variant", "info", "消息类型 (info/warning/error/success)")
-	showToastCmd.MarkFlagRequired("message")
+	_ = showToastCmd.MarkFlagRequired("message")
 
 	executeCommandCmd.Flags().StringVar(&command, "command", "", "要执行的命令")
-	executeCommandCmd.MarkFlagRequired("command")
+	_ = executeCommandCmd.MarkFlagRequired("command")
 
 	controlResponseCmd.Flags().StringVar(&body, "body", "", "响应体 (JSON 格式)")
-	controlResponseCmd.MarkFlagRequired("body")
+	_ = controlResponseCmd.MarkFlagRequired("body")
 }

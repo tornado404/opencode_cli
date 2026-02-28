@@ -69,7 +69,7 @@ func init() {
 	Cmd.AddCommand(setCmd)
 
 	setCmd.Flags().StringArrayVar(&credentials, "credentials", nil, "认证凭据 (key=value 格式)")
-	setCmd.MarkFlagRequired("credentials")
+	_ = setCmd.MarkFlagRequired("credentials")
 }
 
 func indexOf(s string, substr string) int {

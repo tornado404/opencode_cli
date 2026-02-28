@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("OPENCODE_SERVER_PORT", "4096")
 	os.Setenv("OPENCODE_SERVER_USERNAME", "opencode")
 	os.Setenv("OPENCODE_SERVER_PASSWORD", "test")
-	config.Init()
+	_ = config.Init()
 
 	m.Run()
 }
@@ -66,7 +66,7 @@ func TestHealthCmd(t *testing.T) {
 				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(tt.serverStatus)
 					if tt.serverResponse != nil {
-						json.NewEncoder(w).Encode(tt.serverResponse)
+						_ = json.NewEncoder(w).Encode(tt.serverResponse)
 					}
 				}))
 				defer server.Close()

@@ -13,7 +13,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("OPENCODE_SERVER_PASSWORD", "test")
 
 	// 初始化配置
-	Init()
+	_ = Init()
 
 	m.Run()
 }

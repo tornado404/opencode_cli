@@ -28,8 +28,8 @@ var (
 	noReply        bool
 	systemPrompt   string
 	tools          []string
-	asyncMode      bool
-	commandName    string
+	// asyncMode      bool // unused
+	// commandName    string // unused
 	commandArgs    []string
 	shellCommand   string
 )
@@ -44,7 +44,7 @@ func init() {
 
 	// 全局标志
 	Cmd.PersistentFlags().StringVarP(&sessionID, "session", "s", "", "会话 ID")
-	Cmd.MarkPersistentFlagRequired("session")
+	_ = Cmd.MarkPersistentFlagRequired("session")
 }
 
 // listCmd 列出消息
