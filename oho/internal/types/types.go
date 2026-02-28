@@ -31,7 +31,7 @@ type Message struct {
 // Part 消息部分
 type Part struct {
 	Type string      `json:"type"`
-	Data interface{} `json:"data"`
+	Text interface{} `json:"text"`
 }
 
 // MessageWithParts 带部分的消息
@@ -281,5 +281,5 @@ type Submatch struct {
 // Event 事件类型
 type Event struct {
 	Type string      `json:"type"`
-	Data interface{} `json:"data"`
+	Text interface{} `json:"text"`
 }

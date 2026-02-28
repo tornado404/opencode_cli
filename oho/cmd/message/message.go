@@ -117,7 +117,7 @@ var addCmd = &cobra.Command{
 		parts := []types.Part{
 			{
 				Type: "text",
-				Data: args[0],
+				Text: args[0],
 			},
 		}
 
@@ -134,6 +134,12 @@ var addCmd = &cobra.Command{
 		resp, err := c.Post(ctx, fmt.Sprintf("/session/%s/message", sessionID), req)
 		if err != nil {
 			return err
+		}
+
+		// 服务器返回空响应时处理
+		if len(resp) == 0 {
+			fmt.Println("消息已发送")
+			return nil
 		}
 
 		var result types.MessageWithParts
@@ -153,10 +159,10 @@ var addCmd = &cobra.Command{
 		
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
-			if text, ok := part.Data.(string); ok {
+			if text, ok := part.Text.(string); ok {
 				fmt.Printf("%s\n", text)
 			} else {
-				data, _ := json.MarshalIndent(part.Data, "", "  ")
+				data, _ := json.MarshalIndent(part.Text, "", "  ")
 				fmt.Printf("%s\n", string(data))
 			}
 		}
@@ -224,7 +230,7 @@ var promptAsyncCmd = &cobra.Command{
 		parts := []types.Part{
 			{
 				Type: "text",
-				Data: args[0],
+				Text: args[0],
 			},
 		}
 
@@ -297,7 +303,7 @@ var commandCmd = &cobra.Command{
 		
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
-			if text, ok := part.Data.(string); ok {
+			if text, ok := part.Text.(string); ok {
 				fmt.Printf("%s\n", text)
 			}
 		}
@@ -351,7 +357,7 @@ var shellCmd = &cobra.Command{
 		
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
-			if text, ok := part.Data.(string); ok {
+			if text, ok := part.Text.(string); ok {
 				fmt.Printf("%s\n", text)
 			}
 		}
