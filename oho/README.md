@@ -50,6 +50,7 @@ In Linux environments, oho can provide capabilities that OpenCode CLI doesn't cu
 - ✅ File and symbol lookup
 - ✅ TUI interface control
 - ✅ MCP/LSP/Formatter status management
+- 📊 **[API Completion Status](./COMPLETION.md)** - View implementation coverage
 
 ## Installation
 
