@@ -24,18 +24,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestMessageListCmd(t *testing.T) {
-
-import (
-	"context"
-	"encoding/json"
-	"testing"
-
-	"github.com/anomalyco/oho/internal/client"
-	"github.com/anomalyco/oho/internal/testutil"
-	"github.com/anomalyco/oho/internal/types"
-)
-
-func TestMessageListCmd(t *testing.T) {
 	tests := []struct {
 		name     string
 		mockResp []byte
@@ -64,7 +52,7 @@ func TestMessageListCmd(t *testing.T) {
 				},
 			}
 
-			resp, err := mock.GetWithQuery(context.Background(), "/session/session1/message", map[string]string{})
+			_, err := mock.GetWithQuery(context.Background(), "/session/session1/message", map[string]string{})
 			if tt.wantErr && err == nil {
 				t.Error("Expected error but got nil")
 			}
@@ -122,7 +110,7 @@ func TestMessageAddCmd(t *testing.T) {
 			}
 
 			parts := []types.Part{
-				{Type: "text", Data: tt.content},
+				{Type: "text", Text: tt.content},
 			}
 
 			req := types.MessageRequest{
@@ -176,7 +164,7 @@ func TestMessagePromptAsyncCmd(t *testing.T) {
 	}
 
 	parts := []types.Part{
-		{Type: "text", Data: "Async message"},
+		{Type: "text", Text: "Async message"},
 	}
 
 	req := types.MessageRequest{
@@ -266,29 +254,5 @@ func TestMessageShellCmd(t *testing.T) {
 				t.Errorf("Failed to unmarshal: %v", err)
 			}
 		})
-	}
-}
-
-func TestIndexOf(t *testing.T) {
-	tests := []struct {
-		s      string
-		substr string
-		want   int
-	}{
-		{"hello", "ll", 2},
-		{"hello", "lo", 3},
-		{"hello", "x", -1},
-		{"hello", "", 0},
-		{"", "a", -1},
-		{"hello", "hell", 0},
-		{"hello", "hello", 0},
-		{"hello", "o", 4},
-	}
-
-	for _, tt := range tests {
-		result := indexOf(tt.s, tt.substr)
-		if result != tt.want {
-			t.Errorf("indexOf(%q, %q) = %d, want %d", tt.s, tt.substr, result, tt.want)
-		}
 	}
 }

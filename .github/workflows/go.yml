@@ -6,13 +6,11 @@ name: Go CI/CD
 on:
   push:
     branches: [master]
+    tags:
+      - 'v*'
   pull_request:
     branches: [master]
   workflow_dispatch:
-  tag:
-    patterns:
-      - 'v*'
-    types: [created]
 
 env:
   GO_VERSION: '1.21'
@@ -35,6 +33,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Download dependencies
+        working-directory: oho
         run: go mod download
 
       - name: Run golangci-lint
@@ -42,6 +41,7 @@ jobs:
         with:
           version: latest
           args: --timeout=5m
+          working-directory: oho
 
   # ===========================================
   # Job 2: 测试
@@ -59,9 +59,11 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Download dependencies
+        working-directory: oho
         run: go mod download
 
       - name: Run tests
+        working-directory: oho
         run: |
           go test -v -race -coverprofile=coverage.out ./...
           
@@ -94,9 +96,11 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Download dependencies
+        working-directory: oho
         run: go mod download
 
       - name: Build
+        working-directory: oho
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
@@ -107,7 +111,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: bin/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: oho/bin/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
           retention-days: 7
 
   # ===========================================
@@ -157,9 +161,11 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Download dependencies
+        working-directory: oho
         run: go mod download
 
       - name: Build Release
+        working-directory: oho
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
@@ -182,11 +188,12 @@ jobs:
             ### Downloads
             - ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
           files: |
-            ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+            oho/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create checksums
+        working-directory: oho
         run: |
           ${{ matrix.goos == 'windows' && 'certutil -hashfile' || 'sha256sum' }} ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} | tee checksums.txt
 
@@ -194,7 +201,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref }}
-          body_path: checksums.txt
+          body_path: oho/checksums.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

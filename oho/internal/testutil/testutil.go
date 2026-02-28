@@ -75,7 +75,7 @@ func MockMessageResponse() []byte {
 			CreatedAt: 1234567890,
 		},
 		Parts: []types.Part{
-			{Type: "text", Data: "Hello world"},
+		{Type: "text", Text: "Hello world"},
 		},
 	}
 	return MockResponse(msg)

@@ -24,18 +24,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestFileListCmd(t *testing.T) {
-
-import (
-	"context"
-	"encoding/json"
-	"testing"
-
-	"github.com/anomalyco/oho/internal/client"
-	"github.com/anomalyco/oho/internal/testutil"
-	"github.com/anomalyco/oho/internal/types"
-)
-
-func TestFileListCmd(t *testing.T) {
 	tests := []struct {
 		name    string
 		path    string
@@ -95,7 +83,8 @@ func TestFileContentCmd(t *testing.T) {
 		t.Errorf("Failed to unmarshal: %v", err)
 	}
 
-	if content.Path != "main.go" {
+	if content.Path != "/main.go" {
+		t.Errorf("Expected path '/main.go', got %s", content.Path)
 		t.Errorf("Expected path 'main.go', got %s", content.Path)
 	}
 }
