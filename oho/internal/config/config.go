@@ -21,41 +21,44 @@ type Config struct {
 var cfg *Config
 
 // Init 初始化配置
+// 优先级：命令行标志 > 配置文件 > 环境变量 > 默认值
 func Init() error {
+	// 1. 初始化默认值（最低优先级）
 	cfg = &Config{
 		Host:     "127.0.0.1",
 		Port:     4096,
 		Username: "opencode",
-		Password: os.Getenv("OPENCODE_SERVER_PASSWORD"),
+		Password: "",
 		JSON:     false,
 	}
 
-	// 从配置文件加载
+	// 2. 检查配置文件是否存在
 	configFile := getConfigPath()
 	if data, err := os.ReadFile(configFile); err == nil {
+		// 配置文件存在，加载配置
 		if err := json.Unmarshal(data, cfg); err != nil {
 			return fmt.Errorf("解析配置文件失败：%w", err)
 		}
-	}
-
-	// 环境变量覆盖（优先级最高）
-	if envHost := os.Getenv("OPENCODE_SERVER_HOST"); envHost != "" {
-		cfg.Host = envHost
-	}
-	if envPort := os.Getenv("OPENCODE_SERVER_PORT"); envPort != "" {
-		_, _ = fmt.Sscanf(envPort, "%d", &cfg.Port)
-	}
-	if envUsername := os.Getenv("OPENCODE_SERVER_USERNAME"); envUsername != "" {
-		cfg.Username = envUsername
-	}
-	if envPassword := os.Getenv("OPENCODE_SERVER_PASSWORD"); envPassword != "" {
-		cfg.Password = envPassword
+	} else {
+		// 3. 配置文件不存在时，使用环境变量
+		if envHost := os.Getenv("OPENCODE_SERVER_HOST"); envHost != "" {
+			cfg.Host = envHost
+		}
+		if envPort := os.Getenv("OPENCODE_SERVER_PORT"); envPort != "" {
+			_, _ = fmt.Sscanf(envPort, "%d", &cfg.Port)
+		}
+		if envUsername := os.Getenv("OPENCODE_SERVER_USERNAME"); envUsername != "" {
+			cfg.Username = envUsername
+		}
+		if envPassword := os.Getenv("OPENCODE_SERVER_PASSWORD"); envPassword != "" {
+			cfg.Password = envPassword
+		}
 	}
 
 	return nil
 }
 
-// BindFlags 绑定命令行标志到配置
+// BindFlags 绑定命令行标志到配置（最高优先级）
 func BindFlags(flags *pflag.FlagSet) {
 	if host, _ := flags.GetString("host"); host != "" {
 		cfg.Host = host
