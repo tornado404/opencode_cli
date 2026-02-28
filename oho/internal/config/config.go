@@ -38,7 +38,7 @@ func Init() error {
 		}
 	}
 
-	// 环境变量覆盖
+	// 环境变量覆盖（优先级最高）
 	if envHost := os.Getenv("OPENCODE_SERVER_HOST"); envHost != "" {
 		cfg.Host = envHost
 	}
@@ -47,6 +47,9 @@ func Init() error {
 	}
 	if envUsername := os.Getenv("OPENCODE_SERVER_USERNAME"); envUsername != "" {
 		cfg.Username = envUsername
+	}
+	if envPassword := os.Getenv("OPENCODE_SERVER_PASSWORD"); envPassword != "" {
+		cfg.Password = envPassword
 	}
 
 	return nil
@@ -82,7 +85,7 @@ func GetBaseURL() string {
 func Save() error {
 	configFile := getConfigPath()
 	dir := filepath.Dir(configFile)
-	
+
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
