@@ -43,7 +43,7 @@ func Init() error {
 		cfg.Host = envHost
 	}
 	if envPort := os.Getenv("OPENCODE_SERVER_PORT"); envPort != "" {
-		fmt.Sscanf(envPort, "%d", &cfg.Port)
+		if _, err := fmt.Sscanf(envPort, "%d", &cfg.Port); err != nil {}
 	}
 	if envUsername := os.Getenv("OPENCODE_SERVER_USERNAME"); envUsername != "" {
 		cfg.Username = envUsername

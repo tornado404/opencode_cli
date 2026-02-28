@@ -110,5 +110,5 @@ func init() {
 	Cmd.AddCommand(addCmd)
 
 	addCmd.Flags().StringVar(&mcpConfig, "config", "", "MCP 服务器配置 (JSON 格式)")
-	addCmd.MarkFlagRequired("config")
+	_ = addCmd.MarkFlagRequired("config")
 }

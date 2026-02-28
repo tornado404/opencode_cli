@@ -455,7 +455,7 @@ func TestSessionPermissionsCmd(t *testing.T) {
 	}
 }
 
-func createTestServer(handlers map[string]http.HandlerFunc) *httptest.Server {
+func _createTestServer(handlers map[string]http.HandlerFunc) *httptest.Server {
 	mux := http.NewServeMux()
 	for path, handler := range handlers {
 		mux.Handle(path, handler)

@@ -115,6 +115,6 @@ func init() {
 
 	listCmd.Flags().StringVar(&providerID, "provider", "", "提供商 ID")
 	listCmd.Flags().StringVar(&modelID, "model", "", "模型 ID")
-	listCmd.MarkFlagRequired("provider")
-	listCmd.MarkFlagRequired("model")
+	_ = listCmd.MarkFlagRequired("provider")
+	_ = listCmd.MarkFlagRequired("model")
 }

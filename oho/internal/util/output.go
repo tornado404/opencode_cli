@@ -52,7 +52,7 @@ func OutputTable(headers []string, rows [][]string) {
 			}
 			data[i] = rowMap
 		}
-		OutputJSON(data)
+		_ = OutputJSON(data)
 		return
 	}
 
@@ -97,7 +97,7 @@ func Confirm(prompt string) bool {
 
 	fmt.Printf("%s [y/N]: ", prompt)
 	var response string
-	fmt.Scanln(&response)
+	_, _ = fmt.Scanln(&response)
 	return strings.ToLower(response) == "y" || strings.ToLower(response) == "yes"
 }
 
