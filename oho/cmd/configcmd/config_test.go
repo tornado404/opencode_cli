@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("OPENCODE_SERVER_PORT", "4096")
 	os.Setenv("OPENCODE_SERVER_USERNAME", "opencode")
 	os.Setenv("OPENCODE_SERVER_PASSWORD", "test")
-	config.Init()
+	_ = config.Init()
 
 	m.Run()
 }
