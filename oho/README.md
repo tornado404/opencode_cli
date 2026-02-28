@@ -53,6 +53,18 @@ In Linux environments, oho can provide capabilities that OpenCode CLI doesn't cu
 
 ## Installation
 
+### Quick Install (Recommended)
+
+```bash
+# Download and run the installer
+curl -sSL https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/install.sh | bash
+
+# Or with wget
+wget -qO- https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/install.sh | bash
+```
+
+### Build from Source
+
 ### Build from Source
 
 ```bash
@@ -313,7 +325,102 @@ oho/
 │           ├── types/        # Type definitions
 │           └── util/         # Utility functions
 ├── Makefile
-├── build.sh
+```
+
+## MCP Server
+
+oho can be used as an MCP (Model Context Protocol) server, allowing external MCP clients (like Claude Desktop, Cursor, etc.) to call OpenCode API through MCP protocol.
+
+### Start MCP Server
+
+```bash
+# Start the MCP server (stdio mode)
+oho mcpserver
+```
+
+The MCP server uses stdio transport, which is the standard mode for local MCP clients.
+
+### Available MCP Tools
+
+The following tools are available via MCP:
+
+| Tool | Description |
+|------|-------------|
+| `session_list` | List all sessions |
+| `session_create` | Create a new session |
+| `session_get` | Get session details |
+| `session_delete` | Delete a session |
+| `session_status` | Get all session statuses |
+| `message_list` | List messages in a session |
+| `message_add` | Send a message to a session |
+| `config_get` | Get OpenCode configuration |
+| `project_list` | List all projects |
+| `project_current` | Get current project |
+| `provider_list` | List AI providers |
+| `file_list` | List files in a directory |
+| `file_content` | Read file content |
+| `find_text` | Search text in project |
+| `find_file` | Find files by name |
+| `global_health` | Check server health |
+
+### MCP Client Configuration
+
+#### Claude Desktop (macOS/Windows)
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "oho": {
+      "command": "oho",
+      "args": ["mcpserver"],
+      "env": {
+        "OPENCODE_SERVER_HOST": "127.0.0.1",
+        "OPENCODE_SERVER_PORT": "4096",
+        "OPENCODE_SERVER_PASSWORD": "your-password"
+      }
+    }
+  }
+}
+```
+
+#### Cursor
+
+Add to Cursor settings (JSON mode):
+
+```json
+{
+  "mcpServers": {
+    "oho": {
+      "command": "oho",
+      "args": ["mcpserver"],
+      "env": {
+        "OPENCODE_SERVER_HOST": "127.0.0.1",
+        "OPENCODE_SERVER_PORT": "4096",
+        "OPENCODE_SERVER_PASSWORD": "your-password"
+      }
+    }
+  }
+}
+```
+
+#### VS Code (with Copilot Free)
+
+VS Code doesn't have native MCP support. Use the [MCP VS Code extension](https://github.com/modelcontextprotocol/servers):
+
+```json
+{
+  "mcpServers": {
+    "oho": {
+      "command": "oho",
+      "args": ["mcpserver"]
+    }
+  }
+}
+```
+
+## License
 └── README.md
 ```
 
