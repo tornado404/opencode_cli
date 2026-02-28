@@ -24,7 +24,7 @@ type Client struct {
 // NewClient 创建新的 API 客户端
 func NewClient() *Client {
 	cfg := config.Get()
-	
+
 	return &Client{
 		baseURL:  config.GetBaseURL(),
 		username: cfg.Username,
@@ -38,7 +38,7 @@ func NewClient() *Client {
 // Request 发送 HTTP 请求
 func (c *Client) Request(ctx context.Context, method, path string, body interface{}) ([]byte, error) {
 	var reqBody io.Reader
-	
+
 	if body != nil {
 		data, err := json.Marshal(body)
 		if err != nil {
@@ -78,6 +78,9 @@ func (c *Client) Request(ctx context.Context, method, path string, body interfac
 
 	// 检查状态码
 	if resp.StatusCode >= 400 {
+		if resp.StatusCode == 401 {
+			return nil, fmt.Errorf("认证失败 [401]: 用户名或密码错误\n\n请配置认证信息，选择以下任一方式:\n  1. 环境变量 (推荐):\n     export OPENCODE_SERVER_HOST=127.0.0.1\n     export OPENCODE_SERVER_PORT=4096\n     export OPENCODE_SERVER_USERNAME=opencode\n     export OPENCODE_SERVER_PASSWORD=your-password\n\n  2. 命令行标志:\n     oho --password your-password <command>\n\n  3. 配置文件 (~/.config/oho/config.json):\n     {\"password\": \"your-password\"}")
+		}
 		return nil, fmt.Errorf("API 错误 [%d]: %s", resp.StatusCode, string(respBody))
 	}
 
@@ -92,7 +95,7 @@ func (c *Client) RequestWithQuery(ctx context.Context, method, path string, quer
 		if err != nil {
 			return nil, err
 		}
-		
+
 		q := u.Query()
 		for k, v := range queryParams {
 			q.Set(k, v)
@@ -154,8 +157,11 @@ func (c *Client) SSEStream(ctx context.Context, path string) (<-chan []byte, <-c
 	}
 
 	if resp.StatusCode >= 400 {
-		resp.Body.Close()
 		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode == 401 {
+			return nil, nil, fmt.Errorf("认证失败 [401]: 用户名或密码错误\n\n请配置认证信息，选择以下任一方式:\n  1. 环境变量 (推荐):\n     export OPENCODE_SERVER_HOST=127.0.0.1\n     export OPENCODE_SERVER_PORT=4096\n     export OPENCODE_SERVER_USERNAME=opencode\n     export OPENCODE_SERVER_PASSWORD=your-password\n\n  2. 命令行标志:\n     oho --password your-password <command>\n\n  3. 配置文件 (~/.config/oho/config.json):\n     {\"password\": \"your-password\"}")
+		}
 		return nil, nil, fmt.Errorf("SSE 错误 [%d]: %s", resp.StatusCode, string(body))
 	}
 
