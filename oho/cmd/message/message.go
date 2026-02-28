@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -21,17 +22,15 @@ var Cmd = &cobra.Command{
 }
 
 var (
-	sessionID      string
-	messageID      string
-	model          string
-	agent          string
-	noReply        bool
-	systemPrompt   string
-	tools          []string
-	// asyncMode      bool // unused
-	// commandName    string // unused
-	commandArgs    []string
-	shellCommand   string
+	sessionID    string
+	messageID    string
+	model        string
+	agent        string
+	noReply      bool
+	systemPrompt string
+	tools        []string
+	commandArgs  []string
+	shellCommand string
 )
 
 func init() {
@@ -45,6 +44,35 @@ func init() {
 	// 全局标志
 	Cmd.PersistentFlags().StringVarP(&sessionID, "session", "s", "", "会话 ID")
 	_ = Cmd.MarkPersistentFlagRequired("session")
+
+	// list 命令标志
+	listCmd.Flags().IntP("limit", "l", 0, "限制消息数量")
+
+	// add 命令标志
+	addCmd.Flags().StringVar(&messageID, "message", "", "消息 ID")
+	addCmd.Flags().StringVar(&model, "model", "", "模型 ID")
+	addCmd.Flags().StringVar(&agent, "agent", "", "代理 ID")
+	addCmd.Flags().BoolVar(&noReply, "no-reply", false, "不等待响应")
+	addCmd.Flags().StringVar(&systemPrompt, "system", "", "系统提示")
+	addCmd.Flags().StringSliceVar(&tools, "tools", nil, "工具列表")
+
+	// prompt-async 命令标志
+	promptAsyncCmd.Flags().StringVar(&messageID, "message", "", "消息 ID")
+	promptAsyncCmd.Flags().StringVar(&model, "model", "", "模型 ID")
+	promptAsyncCmd.Flags().StringVar(&agent, "agent", "", "代理 ID")
+	promptAsyncCmd.Flags().StringVar(&systemPrompt, "system", "", "系统提示")
+	promptAsyncCmd.Flags().StringSliceVar(&tools, "tools", nil, "工具列表")
+
+	// command 命令标志
+	commandCmd.Flags().StringVar(&messageID, "message", "", "消息 ID")
+	commandCmd.Flags().StringVar(&agent, "agent", "", "代理 ID")
+	commandCmd.Flags().StringVar(&model, "model", "", "模型 ID")
+	commandCmd.Flags().StringArrayVar(&commandArgs, "args", nil, "命令参数 (key=value)")
+
+	// shell 命令标志
+	shellCmd.Flags().StringVar(&agent, "agent", "", "代理 ID (必需)")
+	shellCmd.Flags().StringVar(&model, "model", "", "模型 ID")
+	shellCmd.Flags().StringVar(&shellCommand, "command", "", "Shell 命令")
 }
 
 // listCmd 列出消息
@@ -67,7 +95,7 @@ var listCmd = &cobra.Command{
 
 		var messages []types.MessageWithParts
 		if err := json.Unmarshal(resp, &messages); err != nil {
-			return err
+			return fmt.Errorf("解析消息列表失败：%w", err)
 		}
 
 		if config.Get().JSON {
@@ -144,7 +172,7 @@ var addCmd = &cobra.Command{
 
 		var result types.MessageWithParts
 		if err := json.Unmarshal(resp, &result); err != nil {
-			return err
+			return fmt.Errorf("解析响应失败：%w", err)
 		}
 
 		if config.Get().JSON {
@@ -156,7 +184,7 @@ var addCmd = &cobra.Command{
 		fmt.Printf("消息已发送:\n")
 		fmt.Printf("  ID: %s\n", result.Info.ID)
 		fmt.Printf("  角色：%s\n", result.Info.Role)
-		
+
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
 			if text, ok := part.Text.(string); ok {
@@ -187,7 +215,7 @@ var getCmd = &cobra.Command{
 
 		var result types.MessageWithParts
 		if err := json.Unmarshal(resp, &result); err != nil {
-			return err
+			return fmt.Errorf("解析响应失败：%w", err)
 		}
 
 		if config.Get().JSON {
@@ -201,7 +229,7 @@ var getCmd = &cobra.Command{
 		fmt.Printf("  会话：%s\n", result.Info.SessionID)
 		fmt.Printf("  角色：%s\n", result.Info.Role)
 		fmt.Printf("  时间：%d\n", result.Info.CreatedAt)
-		
+
 		if result.Info.Content != "" {
 			fmt.Printf("\n内容:\n%s\n", result.Info.Content)
 		}
@@ -266,10 +294,9 @@ var commandCmd = &cobra.Command{
 		// 解析命令参数
 		argMap := make(map[string]string)
 		for _, arg := range commandArgs {
-			if idx := indexOf(arg, "="); idx > 0 {
-				key := arg[:idx]
-				value := arg[idx+1:]
-				argMap[key] = value
+			parts := strings.SplitN(arg, "=", 2)
+			if len(parts) == 2 {
+				argMap[parts[0]] = parts[1]
 			}
 		}
 
@@ -288,7 +315,7 @@ var commandCmd = &cobra.Command{
 
 		var result types.MessageWithParts
 		if err := json.Unmarshal(resp, &result); err != nil {
-			return err
+			return fmt.Errorf("解析响应失败：%w", err)
 		}
 
 		if config.Get().JSON {
@@ -300,7 +327,7 @@ var commandCmd = &cobra.Command{
 		fmt.Printf("命令已执行:\n")
 		fmt.Printf("  消息 ID: %s\n", result.Info.ID)
 		fmt.Printf("  角色：%s\n", result.Info.Role)
-		
+
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
 			if text, ok := part.Text.(string); ok {
@@ -325,9 +352,14 @@ var shellCmd = &cobra.Command{
 		c := client.NewClient()
 		ctx := context.Background()
 
+		// 优先使用 --command 标志，否则使用第一个位置参数
 		cmdStr := shellCommand
 		if cmdStr == "" && len(args) > 0 {
 			cmdStr = args[0]
+		}
+
+		if cmdStr == "" {
+			return fmt.Errorf("请提供要执行的 shell 命令")
 		}
 
 		req := types.ShellRequest{
@@ -343,7 +375,7 @@ var shellCmd = &cobra.Command{
 
 		var result types.MessageWithParts
 		if err := json.Unmarshal(resp, &result); err != nil {
-			return err
+			return fmt.Errorf("解析响应失败：%w", err)
 		}
 
 		if config.Get().JSON {
@@ -354,7 +386,7 @@ var shellCmd = &cobra.Command{
 
 		fmt.Printf("Shell 命令已执行:\n")
 		fmt.Printf("  消息 ID: %s\n", result.Info.ID)
-		
+
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
 			if text, ok := part.Text.(string); ok {
@@ -364,44 +396,4 @@ var shellCmd = &cobra.Command{
 
 		return nil
 	},
-}
-
-func init() {
-	// list 命令标志
-	listCmd.Flags().IntP("limit", "l", 0, "限制消息数量")
-
-	// add 命令标志
-	addCmd.Flags().StringVar(&messageID, "message", "", "消息 ID")
-	addCmd.Flags().StringVar(&model, "model", "", "模型 ID")
-	addCmd.Flags().StringVar(&agent, "agent", "", "代理 ID")
-	addCmd.Flags().BoolVar(&noReply, "no-reply", false, "不等待响应")
-	addCmd.Flags().StringVar(&systemPrompt, "system", "", "系统提示")
-	addCmd.Flags().StringSliceVar(&tools, "tools", nil, "工具列表")
-
-	// prompt-async 命令标志
-	promptAsyncCmd.Flags().StringVar(&messageID, "message", "", "消息 ID")
-	promptAsyncCmd.Flags().StringVar(&model, "model", "", "模型 ID")
-	promptAsyncCmd.Flags().StringVar(&agent, "agent", "", "代理 ID")
-	promptAsyncCmd.Flags().StringVar(&systemPrompt, "system", "", "系统提示")
-	promptAsyncCmd.Flags().StringSliceVar(&tools, "tools", nil, "工具列表")
-
-	// command 命令标志
-	commandCmd.Flags().StringVar(&messageID, "message", "", "消息 ID")
-	commandCmd.Flags().StringVar(&agent, "agent", "", "代理 ID")
-	commandCmd.Flags().StringVar(&model, "model", "", "模型 ID")
-	commandCmd.Flags().StringArrayVar(&commandArgs, "args", nil, "命令参数 (key=value)")
-
-	// shell 命令标志
-	shellCmd.Flags().StringVar(&agent, "agent", "", "代理 ID (必需)")
-	shellCmd.Flags().StringVar(&model, "model", "", "模型 ID")
-	shellCmd.Flags().StringVar(&shellCommand, "command", "", "Shell 命令")
-}
-
-func indexOf(s string, substr string) int {
-	for i := 0; i < len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return i
-		}
-	}
-	return -1
 }
