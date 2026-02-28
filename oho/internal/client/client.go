@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
+	"strings"
 	"time"
 
 	"github.com/anomalyco/oho/internal/config"
@@ -91,17 +91,19 @@ func (c *Client) Request(ctx context.Context, method, path string, body interfac
 func (c *Client) RequestWithQuery(ctx context.Context, method, path string, queryParams map[string]string, body interface{}) ([]byte, error) {
 	// 构建查询参数
 	if len(queryParams) > 0 {
-		u, err := url.Parse(c.baseURL + path)
-		if err != nil {
-			return nil, err
-		}
-
-		q := u.Query()
+		query := ""
 		for k, v := range queryParams {
-			q.Set(k, v)
+			if query != "" {
+				query += "&"
+			}
+			query += fmt.Sprintf("%s=%s", k, v)
 		}
-		u.RawQuery = q.Encode()
-		path = u.String()
+		// 将查询参数添加到 path 后面
+		if strings.Contains(path, "?") {
+			path = path + "&" + query
+		} else {
+			path = path + "?" + query
+		}
 	}
 
 	return c.Request(ctx, method, path, body)
