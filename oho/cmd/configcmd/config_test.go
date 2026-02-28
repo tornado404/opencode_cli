@@ -24,18 +24,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestConfigGetCmd(t *testing.T) {
-
-import (
-	"context"
-	"encoding/json"
-	"testing"
-
-	"github.com/anomalyco/oho/internal/client"
-	"github.com/anomalyco/oho/internal/testutil"
-	"github.com/anomalyco/oho/internal/types"
-)
-
-func TestConfigGetCmd(t *testing.T) {
 	mock := &client.MockClient{
 		GetFunc: func(ctx context.Context, path string) ([]byte, error) {
 			return testutil.MockConfigResponse(), nil
@@ -145,29 +133,6 @@ func TestConfigProvidersCmd(t *testing.T) {
 	}
 
 	if len(providers) == 0 {
-		t.Error("Expected providers but got none")
-	}
-}
-	mock := &client.MockClient{
-		GetFunc: func(ctx context.Context, path string) ([]byte, error) {
-			return testutil.MockProvidersResponse(), nil
-		},
-	}
-
-	resp, err := mock.Get(context.Background(), "/config/providers")
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
-	var result struct {
-		Providers []types.Provider  `json:"providers"`
-		Default   map[string]string `json:"default"`
-	}
-	if err := json.Unmarshal(resp, &result); err != nil {
-		t.Errorf("Failed to unmarshal: %v", err)
-	}
-
-	if len(result.Providers) == 0 {
 		t.Error("Expected providers but got none")
 	}
 }

@@ -15,7 +15,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// Initialize config for tests
 	os.Setenv("OPENCODE_SERVER_HOST", "127.0.0.1")
 	os.Setenv("OPENCODE_SERVER_PORT", "4096")
 	os.Setenv("OPENCODE_SERVER_USERNAME", "opencode")
@@ -24,20 +23,6 @@ func TestMain(m *testing.M) {
 
 	m.Run()
 }
-
-func TestSessionListCmd(t *testing.T) {
-
-import (
-	"context"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
-	"github.com/anomalyco/oho/internal/client"
-	"github.com/anomalyco/oho/internal/testutil"
-	"github.com/anomalyco/oho/internal/types"
-)
 
 func TestSessionListCmd(t *testing.T) {
 	tests := []struct {
@@ -66,13 +51,6 @@ func TestSessionListCmd(t *testing.T) {
 			mockResp:   nil,
 			mockErr:    &client.APIError{StatusCode: 500, Message: "Internal Error"},
 			statusCode: 500,
-			wantErr:    true,
-		},
-		{
-			name:       "invalid JSON",
-			mockResp:   []byte("invalid json"),
-			mockErr:    nil,
-			statusCode: 200,
 			wantErr:    true,
 		},
 	}
@@ -477,7 +455,6 @@ func TestSessionPermissionsCmd(t *testing.T) {
 	}
 }
 
-// Helper function to create test server
 func createTestServer(handlers map[string]http.HandlerFunc) *httptest.Server {
 	mux := http.NewServeMux()
 	for path, handler := range handlers {

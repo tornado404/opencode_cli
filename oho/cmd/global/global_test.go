@@ -27,22 +27,6 @@ func TestMain(m *testing.M) {
 
 func TestHealthCmd(t *testing.T) {
 	tests := []struct {
-
-import (
-	"context"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
-	"github.com/anomalyco/oho/internal/client"
-	"github.com/anomalyco/oho/internal/config"
-	"github.com/anomalyco/oho/internal/testutil"
-	"github.com/anomalyco/oho/internal/types"
-)
-
-func TestHealthCmd(t *testing.T) {
-	tests := []struct {
 		name           string
 		serverResponse *types.HealthResponse
 		serverStatus   int
@@ -97,7 +81,11 @@ func TestHealthCmd(t *testing.T) {
 					if tt.wantErr {
 						return nil, &client.APIError{StatusCode: 500, Message: "Internal Error"}
 					}
-					return testutil.MockHealthResponse(), nil
+					// Return different mock response based on test case
+					if tt.wantHealthy {
+						return testutil.MockHealthResponse(), nil
+					}
+					return []byte(`{"healthy":false,"version":"1.0.0"}`), nil
 				},
 			}
 

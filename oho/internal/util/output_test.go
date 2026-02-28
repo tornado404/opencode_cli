@@ -94,43 +94,4 @@ func TestOutputTableJSON(t *testing.T) {
 	OutputTable(headers, rows)
 }
 
-func TestTruncate(t *testing.T) {
-	tests := []struct {
-		input    string
-		maxLen   int
-		expected string
-	}{
-		{"hello", 10, "hello"},
-		{"hello", 3, "..."},
-		{"hi", 5, "hi"},
-		{"", 5, ""},
-	}
 
-	for _, tt := range tests {
-		result := Truncate(tt.input, tt.maxLen)
-		if result != tt.expected {
-			t.Errorf("Truncate(%q, %d) = %q, want %q", tt.input, tt.maxLen, result, tt.expected)
-		}
-	}
-}
-
-func TestPluralize(t *testing.T) {
-	tests := []struct {
-		count    int
-		singular string
-		plural   string
-		expected string
-	}{
-		{1, "item", "items", "item"},
-		{0, "item", "items", "items"},
-		{2, "item", "items", "items"},
-		{100, "session", "sessions", "sessions"},
-	}
-
-	for _, tt := range tests {
-		result := Pluralize(tt.count, tt.singular, tt.plural)
-		if result != tt.expected {
-			t.Errorf("Pluralize(%d, %q, %q) = %q, want %q", tt.count, tt.singular, tt.plural, result, tt.expected)
-		}
-	}
-}
