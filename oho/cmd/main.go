@@ -16,6 +16,7 @@ import (
 	"github.com/anomalyco/oho/cmd/global"
 	"github.com/anomalyco/oho/cmd/lsp"
 	"github.com/anomalyco/oho/cmd/mcp"
+	"github.com/anomalyco/oho/cmd/mcpserver"
 	"github.com/anomalyco/oho/cmd/message"
 	"github.com/anomalyco/oho/cmd/project"
 	"github.com/anomalyco/oho/cmd/provider"
@@ -102,6 +103,7 @@ func main() {
 		lsp.Cmd,
 		formatter.Cmd,
 		mcp.Cmd,
+		mcpserver.Cmd,
 		tui.Cmd,
 		auth.Cmd,
 	)
