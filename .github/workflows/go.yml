@@ -84,7 +84,7 @@ jobs:
     needs: [lint, test]
     strategy:
       matrix:
-        goos: [linux]
+        goos: [linux, windows, darwin]
         goarch: [amd64, arm64]
     steps:
       - name: Checkout code
@@ -105,13 +105,13 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
         run: |
-          go build -ldflags="-s -w" -o bin/${APP_NAME}-${GOOS}-${GOARCH} ./cmd
+          go build -ldflags="-s -w" -o bin/${APP_NAME}-${GOOS}-${GOARCH}${{ matrix.goos == 'windows' && '.exe' || '' }} ./cmd
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: oho/bin/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: oho/bin/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
           retention-days: 7
 
   # ===========================================
@@ -170,38 +170,22 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
         run: |
+          mkdir -p dist
           OUTPUT_NAME="${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
-          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "${OUTPUT_NAME}" ./cmd
-          ls -la
-
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.ref }}
-          name: ${{ env.APP_NAME }} ${{ github.ref }}
-          body: |
-            ## Release Notes
-            
-            ### Changes
-            - Automated build for ${{ matrix.goos }}/${{ matrix.goarch }}
-            
-            ### Downloads
-            - ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
-          files: |
-            oho/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${OUTPUT_NAME}" ./cmd
 
       - name: Create checksums
-        working-directory: oho
+        working-directory: oho/dist
         run: |
-          ${{ matrix.goos == 'windows' && 'certutil -hashfile' || 'sha256sum' }} ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} | tee checksums.txt
+          ${{ matrix.goos == 'windows' && 'certutil -hashfile' || 'sha256sum' }} ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} > ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
 
-      - name: Upload Checksums
-        uses: softprops/action-gh-release@v1
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          body_path: oho/checksums.txt
+          tag_name: ${{ github.ref_name }}
+          files: |
+            oho/dist/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+            oho/dist/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
