@@ -124,33 +124,6 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Linux
-          - os: ubuntu-latest
-            goos: linux
-            goarch: amd64
-            ext: ''
-          - os: ubuntu-latest
-            goos: linux
-            goarch: arm64
-            ext: ''
-          # Windows
-          - os: windows-latest
-            goos: windows
-            goarch: amd64
-            ext: .exe
-          # macOS
-          - os: macos-latest
-            goos: darwin
-            goarch: amd64
-            ext: ''
-          - os: macos-latest
-            goos: darwin
-            goarch: arm64
-            ext: ''
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -164,31 +137,73 @@ jobs:
         working-directory: oho
         run: go mod download
 
-      - name: Build Release
+      - name: Build Linux amd64
         working-directory: oho
         env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
+          GOOS: linux
+          GOARCH: amd64
         run: |
           mkdir -p dist
-          OUTPUT_NAME="${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
-          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${OUTPUT_NAME}" ./cmd
+          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-linux-amd64" ./cmd
+          cd dist && sha256sum ${{ env.APP_NAME }}-linux-amd64 > ${{ env.APP_NAME }}-linux-amd64.sha256
 
-      - name: Create checksums
-        working-directory: oho/dist
+      - name: Build Linux arm64
+        working-directory: oho
+        env:
+          GOOS: linux
+          GOARCH: arm64
         run: |
-          ${{ matrix.goos == 'windows' && 'certutil -hashfile' || 'sha256sum' }} ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} > ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
+          mkdir -p dist
+          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-linux-arm64" ./cmd
+          cd dist && sha256sum ${{ env.APP_NAME }}-linux-arm64 > ${{ env.APP_NAME }}-linux-arm64.sha256
 
-      - name: Upload Release Asset
+      - name: Build Windows amd64
+        working-directory: oho
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: |
+          mkdir -p dist
+          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-windows-amd64.exe" ./cmd
+          cd dist && sha256sum ${{ env.APP_NAME }}-windows-amd64.exe > ${{ env.APP_NAME }}-windows-amd64.exe.sha256
+
+      - name: Build macOS amd64
+        working-directory: oho
+        env:
+          GOOS: darwin
+          GOARCH: amd64
+        run: |
+          mkdir -p dist
+          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-darwin-amd64" ./cmd
+          cd dist && sha256sum ${{ env.APP_NAME }}-darwin-amd64 > ${{ env.APP_NAME }}-darwin-amd64.sha256
+
+      - name: Build macOS arm64
+        working-directory: oho
+        env:
+          GOOS: darwin
+          GOARCH: arm64
+        run: |
+          mkdir -p dist
+          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-darwin-arm64" ./cmd
+          cd dist && sha256sum ${{ env.APP_NAME }}-darwin-arm64 > ${{ env.APP_NAME }}-darwin-arm64.sha256
+
+      - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            oho/dist/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
-            oho/dist/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
+            oho/dist/${{ env.APP_NAME }}-linux-amd64
+            oho/dist/${{ env.APP_NAME }}-linux-amd64.sha256
+            oho/dist/${{ env.APP_NAME }}-linux-arm64
+            oho/dist/${{ env.APP_NAME }}-linux-arm64.sha256
+            oho/dist/${{ env.APP_NAME }}-windows-amd64.exe
+            oho/dist/${{ env.APP_NAME }}-windows-amd64.exe.sha256
+            oho/dist/${{ env.APP_NAME }}-darwin-amd64
+            oho/dist/${{ env.APP_NAME }}-darwin-amd64.sha256
+            oho/dist/${{ env.APP_NAME }}-darwin-arm64
+            oho/dist/${{ env.APP_NAME }}-darwin-arm64.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   # ===========================================
   # Job 5: 通知 (发布成功后)
   # ===========================================
