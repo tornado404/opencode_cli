@@ -174,14 +174,20 @@ jobs:
           OUTPUT_NAME="${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
           go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${OUTPUT_NAME}" ./cmd
 
-      - name: Create checksums
+      - name: Create checksums (Windows)
+        if: matrix.goos == 'windows'
         working-directory: oho/dist
+        shell: pwsh
         run: |
-          if [ "${{ matrix.goos }}" == "windows" ]; then
-            powershell -Command "Get-FileHash -Algorithm SHA256 '${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}' | ForEach-Object { `$_.Hash + '  ' + `$_.Path }" > ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
-          else
-            sha256sum ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} > ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
-          fi
+          Get-ChildItem ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} | ForEach-Object {
+            $hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash
+            "$hash  $($_.Name)" | Out-File -FilePath "$($_.Name).sha256" -Encoding ASCII -NoNewline
+          }
+
+      - name: Create checksums (Unix)
+        if: matrix.goos != 'windows'
+        working-directory: oho/dist
+        run: sha256sum ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} > ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
