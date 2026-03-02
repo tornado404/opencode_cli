@@ -176,8 +176,13 @@ jobs:
 
       - name: Create checksums
         working-directory: oho/dist
+        shell: bash
         run: |
-          ${{ matrix.goos == 'windows' && 'certutil -hashfile' || 'sha256sum' }} ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} > ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
+          if [ "${{ matrix.goos }}" == "windows" ]; then
+            certutil -hashfile ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} SHA256 | grep -v "hash" | grep -v "CertUtil" | tr -d '\r' > ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
+          else
+            sha256sum ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} > ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}.sha256
+          fi
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
