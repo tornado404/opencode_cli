@@ -165,7 +165,7 @@ jobs:
         run: |
           mkdir -p dist
           go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-windows-amd64.exe" ./cmd
-          cd dist && powershell -Command "Get-FileHash -Path ${{ env.APP_NAME }}-windows-amd64.exe -Algorithm SHA256 | ForEach-Object { `$_.Hash + '  ' + `$_.Path }" > ${{ env.APP_NAME }}-windows-amd64.exe.sha256
+          cd dist && sha256sum ${{ env.APP_NAME }}-windows-amd64.exe > ${{ env.APP_NAME }}-windows-amd64.exe.sha256
 
       - name: Build macOS amd64
         working-directory: oho
