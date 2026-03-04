@@ -29,6 +29,7 @@ var (
 	permissionID    string
 	permissionResp  string
 	rememberPerm    bool
+	runningOnly     bool
 )
 
 func init() {
@@ -53,6 +54,9 @@ func init() {
 
 	// 全局会话标志
 	Cmd.PersistentFlags().StringVarP(&sessionID, "session", "s", "", "会话 ID")
+
+	// listCmd 标志
+	listCmd.Flags().BoolVar(&runningOnly, "running", false, "只显示正在运行的会话")
 }
 
 // listCmd 列出所有会话
@@ -73,14 +77,36 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
-		return outputSessions(sessions)
-	},
+		// 如果指定了 --running 标志，获取会话状态并过滤
+		if runningOnly {
+			statusResp, err := c.Get(ctx, "/session/status")
+			if err != nil {
+				return err
+			}
+
+			var statusMap map[string]types.SessionStatus
+			if err := json.Unmarshal(statusResp, &statusMap); err != nil {
+				return err
+			}
+
+			// 过滤出正在运行的会话
+			var runningSessions []types.Session
+			for _, session := range sessions {
+				if status, exists := statusMap[session.ID]; exists && status.IsWorking {
+					runningSessions = append(runningSessions, session)
+				}
+			}
+			sessions = runningSessions
+		}
+		sessions = runningSessions
+	}
+
+	return outputSessions(sessions)
+},
 }
 
 // createCmd 创建新会话
 var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "创建新会话",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := client.NewClient()
 		ctx := context.Background()
