@@ -28,10 +28,25 @@ type Message struct {
 	Content   string `json:"content,omitempty"`
 }
 
-// Part 消息部分
+// Part 消息部分 (对应 OpenCode API 的 TextPart | FilePart)
 type Part struct {
-	Type string      `json:"type"`
-	Text interface{} `json:"text"`
+	Type   string       `json:"type"`
+	Text   *string      `json:"text,omitempty"` // 使用指针，nil 时会被 omit，符合 TextPart 规范
+	URL    string       `json:"url,omitempty"`  // FilePart 的 url 字段 (base64 data URL 或文件路径)
+	Mime   string       `json:"mime,omitempty"` // FilePart 的 mime 字段
+	Source *FileSource  `json:"source,omitempty"` // FilePart 的 source 字段 (可选)
+}
+
+// FileSource 文件来源
+type FileSource struct {
+	Text FileSourceText `json:"text"`
+	Type string         `json:"type"`
+	Path string         `json:"path"`
+}
+
+// FileSourceText 文件源文本
+type FileSourceText struct {
+	Kind string `json:"kind"` // "file" 或其他
 }
 
 // MessageWithParts 带部分的消息

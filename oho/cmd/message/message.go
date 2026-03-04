@@ -2,6 +2,7 @@ package message
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -31,6 +32,7 @@ var (
 	tools        []string
 	commandArgs  []string
 	shellCommand string
+	files        []string
 )
 
 func init() {
@@ -55,6 +57,7 @@ func init() {
 	addCmd.Flags().BoolVar(&noReply, "no-reply", false, "不等待响应")
 	addCmd.Flags().StringVar(&systemPrompt, "system", "", "系统提示")
 	addCmd.Flags().StringSliceVar(&tools, "tools", nil, "工具列表")
+	addCmd.Flags().StringSliceVar(&files, "file", nil, "附件文件路径 (可多次使用)")
 
 	// prompt-async 命令标志
 	promptAsyncCmd.Flags().StringVar(&messageID, "message", "", "消息 ID")
@@ -125,7 +128,7 @@ var addCmd = &cobra.Command{
 	Short: "发送消息并等待响应",
 	Long:  "发送消息到会话并等待 AI 响应",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) == 0 {
+		if len(args) == 0 && len(files) == 0 {
 			// 从 stdin 读取
 			stat, _ := os.Stdin.Stat()
 			if (stat.Mode() & os.ModeCharDevice) == 0 {
@@ -135,18 +138,51 @@ var addCmd = &cobra.Command{
 				}
 				args = []string{string(data)}
 			} else {
-				return fmt.Errorf("请提供消息内容，例如：oho message add -s <session> \"你好\"")
+				return fmt.Errorf("请提供消息内容或文件，例如：oho message add -s <session> \"你好\" 或 oho message add -s <session> --file image.jpg")
 			}
 		}
 
 		c := client.NewClient()
 		ctx := context.Background()
 
-		parts := []types.Part{
-			{
+		// 构建 parts 数组
+		var parts []types.Part
+
+		// 添加文本部分
+		if len(args) > 0 && args[0] != "" {
+			text := args[0]
+			parts = append(parts, types.Part{
 				Type: "text",
-				Text: args[0],
-			},
+				Text: &text,
+			})
+		}
+
+		// 添加文件部分
+		for _, filePath := range files {
+			// 检查文件是否存在
+			if _, err := os.Stat(filePath); os.IsNotExist(err) {
+				return fmt.Errorf("文件不存在：%s", filePath)
+			}
+
+			// 读取文件内容
+			fileData, err := os.ReadFile(filePath)
+			if err != nil {
+				return fmt.Errorf("读取文件失败：%s: %w", filePath, err)
+			}
+
+			// 检测 MIME 类型
+			mimeType := detectMimeType(filePath)
+
+			// 将文件编码为 base64 data URL
+			base64Data := base64.StdEncoding.EncodeToString(fileData)
+			dataURL := fmt.Sprintf("data:%s;base64,%s", mimeType, base64Data)
+
+			// 使用 base64 data URL
+			parts = append(parts, types.Part{
+				Type: "file",
+				URL:  dataURL,
+				Mime: mimeType,
+			})
 		}
 
 		req := types.MessageRequest{
@@ -158,6 +194,10 @@ var addCmd = &cobra.Command{
 			Tools:     tools,
 			Parts:     parts,
 		}
+
+		// 调试输出：打印请求内容
+		reqJSON, _ := json.MarshalIndent(req, "", "  ")
+		fmt.Fprintf(os.Stderr, "DEBUG: 发送请求:\n%s\n", string(reqJSON))
 
 		resp, err := c.Post(ctx, fmt.Sprintf("/session/%s/message", sessionID), req)
 		if err != nil {
@@ -187,11 +227,8 @@ var addCmd = &cobra.Command{
 
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
-			if text, ok := part.Text.(string); ok {
-				fmt.Printf("%s\n", text)
-			} else {
-				data, _ := json.MarshalIndent(part.Text, "", "  ")
-				fmt.Printf("%s\n", string(data))
+			if part.Text != nil {
+				fmt.Printf("%s\n", *part.Text)
 			}
 		}
 
@@ -258,7 +295,7 @@ var promptAsyncCmd = &cobra.Command{
 		parts := []types.Part{
 			{
 				Type: "text",
-				Text: args[0],
+				Text: &args[0],
 			},
 		}
 
@@ -330,8 +367,8 @@ var commandCmd = &cobra.Command{
 
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
-			if text, ok := part.Text.(string); ok {
-				fmt.Printf("%s\n", text)
+			if part.Text != nil {
+				fmt.Printf("%s\n", *part.Text)
 			}
 		}
 
@@ -389,11 +426,73 @@ var shellCmd = &cobra.Command{
 
 		for _, part := range result.Parts {
 			fmt.Printf("\n[%s]\n", part.Type)
-			if text, ok := part.Text.(string); ok {
-				fmt.Printf("%s\n", text)
+			if part.Text != nil {
+				fmt.Printf("%s\n", *part.Text)
 			}
 		}
 
 		return nil
 	},
+}
+
+// detectMimeType 根据文件扩展名检测 MIME 类型
+func detectMimeType(filePath string) string {
+	ext := strings.ToLower(filePath[strings.LastIndex(filePath, "."):])
+	
+	mimeTypes := map[string]string{
+		// 图片
+		".jpg":  "image/jpeg",
+		".jpeg": "image/jpeg",
+		".png":  "image/png",
+		".gif":  "image/gif",
+		".webp": "image/webp",
+		".bmp":  "image/bmp",
+		".svg":  "image/svg+xml",
+		
+		// 文档
+		".pdf":  "application/pdf",
+		".doc":  "application/msword",
+		".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+		".xls":  "application/vnd.ms-excel",
+		".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		".ppt":  "application/vnd.ms-powerpoint",
+		".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+		
+		// 文本
+		".txt":  "text/plain",
+		".md":   "text/markdown",
+		".html": "text/html",
+		".css":  "text/css",
+		".js":   "application/javascript",
+		".json": "application/json",
+		".xml":  "application/xml",
+		".yaml": "application/x-yaml",
+		".yml":  "application/x-yaml",
+		
+		// 代码
+		".py":   "text/x-python",
+		".go":   "text/x-go",
+		".java": "text/x-java",
+		".c":    "text/x-c",
+		".cpp":  "text/x-c++",
+		".h":    "text/x-c",
+		".rs":   "text/x-rust",
+		".ts":   "text/x-typescript",
+		".tsx":  "text/x-typescript",
+		
+		// 其他
+		".zip":  "application/zip",
+		".tar":  "application/x-tar",
+		".gz":   "application/gzip",
+		".mp3":  "audio/mpeg",
+		".mp4":  "video/mp4",
+		".wav":  "audio/wav",
+	}
+	
+	if mimeType, ok := mimeTypes[ext]; ok {
+		return mimeType
+	}
+	
+	// 默认返回 octet-stream
+	return "application/octet-stream"
 }
