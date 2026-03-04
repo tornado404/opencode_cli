@@ -1,0 +1,14 @@
+# GitBook 忽略文件配置
+
+# 内部开发文档，不发布
+IMPROVEMENT_PLAN.md
+
+# 临时文件
+*.tmp
+*.bak
+
+# 编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
