@@ -1,7 +1,7 @@
 # oho CLI 操作指南 - 模块 3: 检查 Session
 
-> **适用版本**: oho CLI v1.0+  
-> **最后更新**: 2026-03-02  
+> **适用版本**: oho CLI v1.1+  
+> **最后更新**: 2026-03-04  
 > **作者**: nanobot 🐈  
 > **前置模块**: [模块 2: 验证](./02-validation.md)
 
@@ -362,6 +362,111 @@ oho session list --exclude-status error,aborted
 # 复杂查询 (JSON 输出后处理)
 oho session list --json | jq '.[] | select(.messageCount > 10)'
 ```
+
+---
+
+### 5.4 多字段精确过滤（新增）
+
+**oho CLI v1.1+** 支持按会话的每个字段进行精确过滤或模糊查询：
+
+```bash
+# 按会话 ID 过滤（支持模糊查询）
+oho session list --id ses_abc123
+oho session list --id "ses_34db"
+
+# 按标题过滤（支持模糊查询，不区分大小写）
+oho session list --title "babylon3D"
+oho session list --title "水体测试"
+
+# 按创建时间过滤（时间戳，精确匹配）
+oho session list --created 1773537883643
+
+# 按更新时间过滤（时间戳，精确匹配）
+oho session list --updated 1773538142930
+
+# 按项目 ID 过滤（支持模糊查询）
+oho session list --project-id "1f01524d641bdfc5f4e43134de956b66c0b1332b"
+oho session list --project-id "proj1"
+
+# 按目录过滤（支持模糊查询）
+oho session list --directory "rl_mockgame"
+oho session list --directory "/mnt/d/code"
+```
+
+**过滤参数说明**:
+
+| 参数 | 类型 | 匹配方式 | 示例 |
+|------|------|---------|------|
+| `--id` | string | 模糊匹配（不区分大小写） | `--id "ses_abc"` |
+| `--title` | string | 模糊匹配（不区分大小写） | `--title "测试"` |
+| `--created` | int64 | 精确匹配（Unix 时间戳毫秒） | `--created 1773537883643` |
+| `--updated` | int64 | 精确匹配（Unix 时间戳毫秒） | `--updated 1773538142930` |
+| `--project-id` | string | 模糊匹配（不区分大小写） | `--project-id "proj1"` |
+| `--directory` | string | 模糊匹配（不区分大小写） | `--directory "babylon"` |
+
+---
+
+### 5.5 组合过滤示例
+
+```bash
+# 组合多个字段过滤
+oho session list --title "babylon3D" --directory "babylon3DWorld"
+
+# 组合状态 + 字段过滤
+oho session list --status running --title "测试"
+
+# 组合排序 + 过滤 + 分页
+oho session list --title "项目" --sort updated --order desc --limit 10
+
+# JSON 输出 + 字段过滤
+oho session list --project-id "proj1" --json | jq '.[] | {id, title, directory}'
+```
+
+**实际输出示例**:
+
+```bash
+$ oho session list --title "babylon3D" --directory "babylon3DWorld"
+共 2 个会话:
+
+ID:     ses_34dbffe0dffe8SfdMTbL53MWFP
+标题：   babylon3D 水体测试与地图编辑器
+模型：   
+---
+ID:     ses_35720ca6cffetpjG9PEV9bIcKZ
+标题：   探索 babylon3DWorld 湖泊渲染代码 (@explore subagent)
+模型：   
+---
+```
+
+---
+
+### 5.6 过滤与排序、分页组合
+
+```bash
+# 过滤后排序
+oho session list --title "测试" --sort created --order asc
+
+# 过滤后分页
+oho session list --directory "project1" --limit 5 --offset 10
+
+# 完整组合
+oho session list \
+  --title "babylon3D" \
+  --directory "babylon3DWorld" \
+  --sort updated \
+  --order desc \
+  --limit 10 \
+  --offset 0
+```
+
+**排序参数**:
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `--sort` | `updated` | 排序字段：`created` 或 `updated` |
+| `--order` | `desc` | 排序顺序：`asc`（升序）或 `desc`（降序） |
+| `--limit` | 无限制 | 返回结果数量上限 |
+| `--offset` | 0 | 分页偏移量 |
 
 ---
 

@@ -168,6 +168,14 @@ oho instance dispose       # Dispose current instance
 
 ```bash
 oho session list                      # List all sessions
+oho session list --id ses_abc         # Filter by ID (fuzzy match)
+oho session list --title "测试"        # Filter by title (fuzzy)
+oho session list --project-id proj1   # Filter by project ID
+oho session list --directory babylon  # Filter by directory
+oho session list --created 1773537883643  # Filter by created timestamp
+oho session list --updated 1773538142930  # Filter by updated timestamp
+oho session list --sort updated --order desc  # Sort by updated (desc)
+oho session list --limit 10 --offset 0  # Pagination
 oho session create                    # Create new session
 oho session create --path /path        # Create session in specified directory
 oho session status                    # Get all session statuses
@@ -186,6 +194,24 @@ oho session revert <id> --message <msg-id>  # Revert message
 oho session unrevert <id>             # Undo revert
 oho session permissions <id> <perm-id> --response allow  # Respond to permission
 ```
+
+**List Command Flags**:
+
+| Flag | Type | Description | Default |
+|------|------|-------------|---------|
+| `--id` | string | Filter by ID (fuzzy, case-insensitive) | - |
+| `--title` | string | Filter by title (fuzzy, case-insensitive) | - |
+| `--created` | int64 | Filter by created timestamp (exact) | - |
+| `--updated` | int64 | Filter by updated timestamp (exact) | - |
+| `--project-id` | string | Filter by project ID (fuzzy) | - |
+| `--directory` | string | Filter by directory (fuzzy) | - |
+| `--status` | string | Filter by status (running/completed/error/aborted/idle) | - |
+| `--running` | bool | Show only running sessions | false |
+| `--sort` | string | Sort field (created/updated) | updated |
+| `--order` | string | Sort order (asc/desc) | desc |
+| `--limit` | int | Limit results count | - |
+| `--offset` | int | Pagination offset | 0 |
+| `-j, --json` | bool | JSON output format | false |
 
 ### Message Management
 
