@@ -83,6 +83,10 @@ func init() {
 	listCmd.Flags().Int64Var(&filterUpdated, "updated", 0, "按更新时间过滤（时间戳，精确匹配）")
 	listCmd.Flags().StringVar(&filterProjectID, "project-id", "", "按项目 ID 过滤（支持模糊查询）")
 	listCmd.Flags().StringVar(&filterDirectory, "directory", "", "按目录过滤（支持模糊查询）")
+
+	// createCmd 标志
+	createCmd.Flags().StringVar(&parentID, "parent", "", "父会话 ID（用于创建子会话）")
+	createCmd.Flags().StringVar(&title, "title", "", "会话标题")
 }
 
 // listCmd 列出所有会话
@@ -195,6 +199,9 @@ var listCmd = &cobra.Command{
 
 // createCmd 创建新会话
 var createCmd = &cobra.Command{
+	Use:   "create",
+	Short: "创建新会话",
+	Long:  "创建一个新的 OpenCode 会话，可选择指定父会话和标题",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := client.NewClient()
 		ctx := context.Background()
