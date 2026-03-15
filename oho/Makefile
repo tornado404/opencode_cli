@@ -1,13 +1,25 @@
-.PHONY: build test clean run
+.PHONY: build build-dev build-linux build-linux-version test clean run
 
 # Variables
 BINARY_NAME=oho
 BUILD_DIR=bin
 CMD_PATH=./cmd
 
-# Build for current platform
+# Get version from git tag
+VERSION=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+DATE=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+
+# Build for current platform (with version info)
 build:
-	@echo "Building $(BINARY_NAME)..."
+	@echo "Building $(BINARY_NAME) $(VERSION)..."
+	@go build -ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.Date=$(DATE)" -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_PATH)
+	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
+	@$(BUILD_DIR)/$(BINARY_NAME) --version
+
+# Build without version info (for development)
+build-dev:
+	@echo "Building $(BINARY_NAME) (dev mode)..."
 	@go build -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_PATH)
 	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
 
@@ -15,6 +27,12 @@ build:
 build-linux:
 	@echo "Building $(BINARY_NAME) for Linux..."
 	@GOOS=linux GOARCH=amd64 go build -o $(BUILD_DIR)/$(BINARY_NAME)-linux $(CMD_PATH)
+	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)-linux"
+
+# Build for Linux with version info
+build-linux-version:
+	@echo "Building $(BINARY_NAME) for Linux $(VERSION)..."
+	@GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.Date=$(DATE)" -o $(BUILD_DIR)/$(BINARY_NAME)-linux $(CMD_PATH)
 	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)-linux"
 
 # Run tests
