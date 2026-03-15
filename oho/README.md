@@ -177,6 +177,8 @@ oho session list --updated 1773538142930  # Filter by updated timestamp
 oho session list --sort updated --order desc  # Sort by updated (desc)
 oho session list --limit 10 --offset 0  # Pagination
 oho session create                    # Create new session
+oho session create --title "名称"       # Create with custom title
+oho session create --parent ses_xxx   # Create child session
 oho session create --path /path        # Create session in specified directory
 oho session status                    # Get all session statuses
 oho session get <id>                  # Get session details

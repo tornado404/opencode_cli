@@ -1,7 +1,7 @@
 # oho CLI 操作指南 - 模块 4: 新建工作区
 
-> **适用版本**: oho CLI v1.0+  
-> **最后更新**: 2026-03-03  
+> **适用版本**: oho CLI v1.1+  
+> **最后更新**: 2026-03-04  
 > **作者**: nanobot 🐈  
 > **前置模块**: [模块 3: 检查 Session](./03-check-session.md)
 
@@ -654,10 +654,25 @@ Git 仓库：false
 ### 验证 4: oho session create (创建工作区)
 
 ```bash
+# 基本用法：创建会话
 $ oho session create
 会话创建成功:
   ID: ses_34afd94f6ffe4IWeoe4rpzHidB
   标题：New session - 2026-03-03T18:42:40.522Z
+  模型：
+
+# 带标题创建
+$ oho session create --title "rl_mockgame_v3_implementation"
+会话创建成功:
+  ID: ses_xxxxx
+  标题：rl_mockgame_v3_implementation
+  模型：
+
+# 创建子会话（基于父会话）
+$ oho session create --parent ses_34afd94f6ffe4IWeoe4rpzHidB --title "分支任务"
+会话创建成功:
+  ID: ses_yyyyy
+  标题：分支任务
   模型：
 ```
 
@@ -666,6 +681,12 @@ $ oho session create
 2. 系统自动分配工作区（如未指定）
 3. 返回会话 ID 和标题
 4. 首次发送消息时确定模型
+
+**create 命令参数**:
+| 参数 | 说明 | 是否必须 |
+|------|------|---------|
+| `--title` | 会话标题 | 可选 |
+| `--parent` | 父会话 ID（创建子会话） | 可选 |
 
 ---
 
