@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -20,16 +22,28 @@ var Cmd = &cobra.Command{
 }
 
 var (
-	sessionID       string
-	parentID        string
-	title           string
-	messageID       string
-	providerID      string
-	modelID         string
-	permissionID    string
-	permissionResp  string
-	rememberPerm    bool
-	runningOnly     bool
+	sessionID      string
+	parentID       string
+	title          string
+	messageID      string
+	providerID     string
+	modelID        string
+	permissionID   string
+	permissionResp string
+	rememberPerm   bool
+	runningOnly    bool
+	limit          int
+	offset         int
+	sortBy         string
+	sortOrder      string
+	statusFilter   string
+	// list 过滤参数
+	filterID        string
+	filterTitle     string
+	filterCreated   int64
+	filterUpdated   int64
+	filterProjectID string
+	filterDirectory string
 )
 
 func init() {
@@ -57,6 +71,18 @@ func init() {
 
 	// listCmd 标志
 	listCmd.Flags().BoolVar(&runningOnly, "running", false, "只显示正在运行的会话")
+	listCmd.Flags().IntVar(&limit, "limit", 0, "限制结果数量")
+	listCmd.Flags().IntVar(&offset, "offset", 0, "分页偏移量")
+	listCmd.Flags().StringVar(&sortBy, "sort", "updated", "排序字段 (created/updated)")
+	listCmd.Flags().StringVar(&sortOrder, "order", "desc", "排序顺序 (asc/desc)")
+	listCmd.Flags().StringVar(&statusFilter, "status", "", "按状态过滤 (running/completed/error/aborted/idle)")
+	// 过滤参数
+	listCmd.Flags().StringVar(&filterID, "id", "", "按 ID 过滤（支持模糊查询）")
+	listCmd.Flags().StringVar(&filterTitle, "title", "", "按标题过滤（支持模糊查询）")
+	listCmd.Flags().Int64Var(&filterCreated, "created", 0, "按创建时间过滤（时间戳，精确匹配）")
+	listCmd.Flags().Int64Var(&filterUpdated, "updated", 0, "按更新时间过滤（时间戳，精确匹配）")
+	listCmd.Flags().StringVar(&filterProjectID, "project-id", "", "按项目 ID 过滤（支持模糊查询）")
+	listCmd.Flags().StringVar(&filterDirectory, "directory", "", "按目录过滤（支持模糊查询）")
 }
 
 // listCmd 列出所有会话
@@ -67,6 +93,7 @@ var listCmd = &cobra.Command{
 		c := client.NewClient()
 		ctx := context.Background()
 
+		// 获取会话列表
 		resp, err := c.Get(ctx, "/session")
 		if err != nil {
 			return err
@@ -77,32 +104,93 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
-		// 如果指定了 --running 标志，获取会话状态并过滤
-		if runningOnly {
+		// 获取会话状态（用于状态过滤）
+		var statusMap map[string]types.SessionStatus
+		if statusFilter != "" || runningOnly {
 			statusResp, err := c.Get(ctx, "/session/status")
 			if err != nil {
 				return err
 			}
-
-			var statusMap map[string]types.SessionStatus
 			if err := json.Unmarshal(statusResp, &statusMap); err != nil {
 				return err
 			}
+		}
 
-			// 过滤出正在运行的会话
-			var runningSessions []types.Session
+		// 应用状态过滤
+		if runningOnly {
+			var filteredSessions []types.Session
 			for _, session := range sessions {
 				if status, exists := statusMap[session.ID]; exists && status.IsWorking {
-					runningSessions = append(runningSessions, session)
+					filteredSessions = append(filteredSessions, session)
 				}
 			}
-			sessions = runningSessions
+			sessions = filteredSessions
+		} else if statusFilter != "" {
+			var filteredSessions []types.Session
+			for _, session := range sessions {
+				status, exists := statusMap[session.ID]
+				match := false
+				switch statusFilter {
+				case "running":
+					// running 状态必须在 statusMap 中存在且 IsWorking=true
+					match = exists && status.IsWorking
+				case "completed", "idle":
+					// completed/idle: 如果 statusMap 中没有该会话，说明不在工作中，视为 completed
+					// 如果存在且不是 working 状态，也是 completed
+					if !exists {
+						match = true
+					} else {
+						match = !status.IsWorking
+					}
+				case "error":
+					match = exists && status.Status == "error"
+				case "aborted":
+					match = exists && status.Status == "aborted"
+				default:
+					match = true
+				}
+				if match {
+					filteredSessions = append(filteredSessions, session)
+				}
+			}
+			sessions = filteredSessions
 		}
-		sessions = runningSessions
-	}
 
-	return outputSessions(sessions)
-},
+		// 应用字段过滤
+		sessions = applyFieldFilter(sessions)
+
+		// 应用排序
+		sort.Slice(sessions, func(i, j int) bool {
+			var less bool
+			switch sortBy {
+			case "created":
+				less = sessions[i].Time.Created < sessions[j].Time.Created
+			case "updated", "":
+				less = sessions[i].Time.Updated < sessions[j].Time.Updated
+			default:
+				less = sessions[i].Time.Updated < sessions[j].Time.Updated
+			}
+			if sortOrder == "desc" {
+				return !less
+			}
+			return less
+		})
+
+		// 应用分页
+		if limit > 0 {
+			start := offset
+			if start > len(sessions) {
+				start = len(sessions)
+			}
+			end := start + limit
+			if end > len(sessions) {
+				end = len(sessions)
+			}
+			sessions = sessions[start:end]
+		}
+
+		return outputSessions(sessions)
+	},
 }
 
 // createCmd 创建新会话
@@ -777,4 +865,62 @@ func outputSessions(sessions []types.Session) error {
 	}
 
 	return nil
+}
+
+// applyFieldFilter 应用字段过滤
+func applyFieldFilter(sessions []types.Session) []types.Session {
+	// 如果没有设置任何过滤条件，返回原列表
+	if filterID == "" && filterTitle == "" && filterCreated == 0 &&
+		filterUpdated == 0 && filterProjectID == "" && filterDirectory == "" {
+		return sessions
+	}
+
+	var filtered []types.Session
+	for _, s := range sessions {
+		match := true
+
+		// ID 过滤（支持模糊查询）
+		if filterID != "" && !contains(s.ID, filterID) {
+			match = false
+		}
+
+		// 标题过滤（支持模糊查询）
+		if filterTitle != "" && !contains(s.Title, filterTitle) {
+			match = false
+		}
+
+		// 创建时间过滤（精确匹配）
+		if filterCreated != 0 && s.Time.Created != filterCreated {
+			match = false
+		}
+
+		// 更新时间过滤（精确匹配）
+		if filterUpdated != 0 && s.Time.Updated != filterUpdated {
+			match = false
+		}
+
+		// 项目 ID 过滤（支持模糊查询）
+		if filterProjectID != "" && !contains(s.ProjectID, filterProjectID) {
+			match = false
+		}
+
+		// 目录过滤（支持模糊查询）
+		if filterDirectory != "" && !contains(s.Directory, filterDirectory) {
+			match = false
+		}
+
+		if match {
+			filtered = append(filtered, s)
+		}
+	}
+
+	return filtered
+}
+
+// contains 检查是否包含子字符串（不区分大小写）
+func contains(s, substr string) bool {
+	if s == "" || substr == "" {
+		return true
+	}
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
