@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,12 +27,21 @@ type Client struct {
 func NewClient() *Client {
 	cfg := config.Get()
 
+	// 默认超时 5 分钟，支持通过环境变量调整
+	// 对于需要长时间思考的 AI 任务，30 秒可能不够
+	timeoutSec := 300 // 5 分钟
+	if envTimeout := os.Getenv("OPENCODE_CLIENT_TIMEOUT"); envTimeout != "" {
+		if parsed, err := strconv.Atoi(envTimeout); err == nil && parsed > 0 {
+			timeoutSec = parsed
+		}
+	}
+
 	return &Client{
 		baseURL:  config.GetBaseURL(),
 		username: cfg.Username,
 		password: cfg.Password,
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: time.Duration(timeoutSec) * time.Second,
 		},
 	}
 }

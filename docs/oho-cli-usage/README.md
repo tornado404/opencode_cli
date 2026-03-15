@@ -2,17 +2,17 @@
 
 > **完整教程**: 从入门到精通  
 > **适用版本**: oho CLI v1.1+ (dev)  
-> **最后更新**: 2026-03-04 23:15 CST  
-> **状态**: 🟢 已完成（8/8 模块验证完成）
+> **最后更新**: 2026-03-15 CST  
+> **状态**: 🟢 已完成（9/9 模块验证完成）
 
 ---
 
 ## 📚 教程目录
 
-本教程共 8 个模块，涵盖 oho CLI 的核心功能：
+本教程共 9 个模块，涵盖 oho CLI 的核心功能和问题排查：
 
 | 模块 | 主题 | 文件 | 验证状态 | 命令数 | 文档大小 |
-|------|------|------|----------|--------|----------|
+|------|------|------|------|----------|--------|----------|
 | 1 | 客户端初始化 | [01-client-initialization.md](./01-client-initialization.md) | ✅ 已验证 | 6 | 9.2KB |
 | 2 | 验证 | [02-validation.md](./02-validation.md) | ✅ 已验证 | 5 | 12KB |
 | 3 | 检查 Session | [03-check-session.md](./03-check-session.md) | ✅ 已验证 | 9 | 17KB |
@@ -21,12 +21,14 @@
 | 6 | 指定 session_id 和模型发消息 | [06-send-message.md](./06-send-message.md) | ✅ 已验证 | 20 | 34KB |
 | 7 | 中断任务 | [07-interrupt-task.md](./07-interrupt-task.md) | ✅ 已验证 | 15 | 32KB |
 | 8 | 查询任务执行情况及状态 | [08-query-status.md](./08-query-status.md) | ✅ 已验证 | 18 | 39KB |
+| 9 | **问题排查指南** | [09-troubleshooting.md](./09-troubleshooting.md) | ✅ 新增 | 25+ | 45KB |
 
 **总体进度**: 
-- ✅ 8/8 模块创建完成 (100%) 🎉
-- ✅ 8/8 模块实际验证完成 (100%) 🎉
-- 📊 总文档大小：~185KB
+- ✅ 9/9 模块创建完成 (100%) 🎉
+- ✅ 8/8 核心模块实际验证完成 (100%) 🎉
+- 📊 总文档大小：~230KB
 - 🔬 总命令验证：101 个实际输出示例
+- 📝 新增诊断脚本：2 个
 
 ---
 
@@ -347,6 +349,35 @@ oho session get "$SESSION" --json
 
 ---
 
+### 模块 9: 问题排查指南 🆕
+
+**适用场景**: 消息提交后无响应、连接失败、认证错误等问题
+
+**包含内容**:
+- ✅ 快速诊断流程（5 分钟检查）
+- ✅ 问题定位流程图
+- ✅ 连接问题排查（服务器、端口、CORS）
+- ✅ 认证问题排查（401 错误、密码配置）
+- ✅ 消息无响应问题（6 大原因分析）
+- ✅ 会话状态问题（ID 无效、被中止）
+- ✅ 模型/提供商问题（API Key、配额）
+- ✅ 文件附件问题（路径、大小、类型）
+- ✅ 性能问题（响应时间、内存占用）
+- ✅ 完整诊断脚本（自动检查 7 项）
+- ✅ 快速检查脚本（30 秒完成）
+- ✅ 常见问题速查表
+
+**关键工具**:
+- `debug_message.sh` - 完整诊断脚本
+- `quick_check.sh` - 快速检查脚本
+- `monitor_session.sh` - 会话状态监控
+
+**阅读时间**: 30 分钟
+
+👉 [开始学习](./09-troubleshooting.md)
+
+---
+
 ## 🛠️ 常用命令速查
 
 ### 会话管理
@@ -391,11 +422,28 @@ export OPENCODE_SERVER_PASSWORD # 环境变量认证
 
 ## 📊 文档统计
 
-**总文档数**: 10 个文件  
-**总大小**: ~185KB  
+**总文档数**: 12 个文件  
+**总大小**: ~235KB  
 **总命令验证**: 101 个实际输出示例  
-**总脚本示例**: 42 个实用脚本  
+**总脚本示例**: 45 个实用脚本  
 **验证时间跨度**: 2026-03-03 23:28 ~ 2026-03-04 18:59 CST
+
+### 文件列表
+
+| 文件 | 说明 |
+|------|------|
+| [README.md](./README.md) | 教程总览 |
+| [01-client-initialization.md](./01-client-initialization.md) | 客户端初始化 |
+| [02-validation.md](./02-validation.md) | 认证验证 |
+| [03-check-session.md](./03-check-session.md) | 会话检查 |
+| [04-create-workspace.md](./04-create-workspace.md) | 创建工作区 |
+| [05-submit-task.md](./05-submit-task.md) | 提交任务 |
+| [06-send-message.md](./06-send-message.md) | 发送消息 |
+| [07-interrupt-task.md](./07-interrupt-task.md) | 中断任务 |
+| [08-query-status.md](./08-query-status.md) | 查询状态 |
+| [09-troubleshooting.md](./09-troubleshooting.md) | 问题排查 |
+| [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) | 快速参考卡片 |
+| [IMPROVEMENT_PLAN.md](./IMPROVEMENT_PLAN.md) | 改进计划 |
 
 ### 文件大小分布
 
@@ -415,6 +463,12 @@ export OPENCODE_SERVER_PASSWORD # 环境变量认证
 ---
 
 ## 📝 更新日志
+
+### 2026-03-15 CST
+- ✅ 创建模块 9: 问题排查指南 (09-troubleshooting.md)
+- ✅ 添加完整诊断脚本 (debug_message.sh)
+- ✅ 添加问题排查流程图
+- ✅ 更新 README.md 反映新模块
 
 ### 2026-03-04 22:11 CST
 - ✅ 所有 8 个模块完成实际验证
