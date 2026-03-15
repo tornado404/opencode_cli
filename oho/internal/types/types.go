@@ -1,14 +1,31 @@
 package types
 
+// SessionTime 会话时间戳
+type SessionTime struct {
+	Created int64 `json:"created"`
+	Updated int64 `json:"updated"`
+}
+
 // Session 会话类型
 type Session struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	ParentID  string `json:"parentId,omitempty"`
-	CreatedAt int64  `json:"createdAt"`
-	UpdatedAt int64  `json:"updatedAt"`
-	Model     string `json:"model"`
-	Agent     string `json:"agent"`
+	ID        string      `json:"id"`
+	Title     string      `json:"title"`
+	ParentID  string      `json:"parentId,omitempty"`
+	ProjectID string      `json:"projectId,omitempty"`
+	Directory string      `json:"directory,omitempty"`
+	Time      SessionTime `json:"time"`
+	Model     string      `json:"model"`
+	Agent     string      `json:"agent"`
+}
+
+// CreatedAt 获取创建时间戳（兼容接口）
+func (s *Session) CreatedAt() int64 {
+	return s.Time.Created
+}
+
+// UpdatedAt 获取更新时间戳（兼容接口）
+func (s *Session) UpdatedAt() int64 {
+	return s.Time.Updated
 }
 
 // SessionStatus 会话状态
@@ -30,11 +47,11 @@ type Message struct {
 
 // Part 消息部分 (对应 OpenCode API 的 TextPart | FilePart)
 type Part struct {
-	Type   string       `json:"type"`
-	Text   *string      `json:"text,omitempty"` // 使用指针，nil 时会被 omit，符合 TextPart 规范
-	URL    string       `json:"url,omitempty"`  // FilePart 的 url 字段 (base64 data URL 或文件路径)
-	Mime   string       `json:"mime,omitempty"` // FilePart 的 mime 字段
-	Source *FileSource  `json:"source,omitempty"` // FilePart 的 source 字段 (可选)
+	Type   string      `json:"type"`
+	Text   *string     `json:"text,omitempty"`   // 使用指针，nil 时会被 omit，符合 TextPart 规范
+	URL    string      `json:"url,omitempty"`    // FilePart 的 url 字段 (base64 data URL 或文件路径)
+	Mime   string      `json:"mime,omitempty"`   // FilePart 的 mime 字段
+	Source *FileSource `json:"source,omitempty"` // FilePart 的 source 字段 (可选)
 }
 
 // FileSource 文件来源

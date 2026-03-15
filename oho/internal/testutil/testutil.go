@@ -27,8 +27,8 @@ func MockResponse(v interface{}) []byte {
 // MockSessionsResponse 模拟会话列表响应
 func MockSessionsResponse() []byte {
 	sessions := []types.Session{
-		{ID: "session1", Title: "Test Session 1", Model: "gpt-4"},
-		{ID: "session2", Title: "Test Session 2", Model: "gpt-3.5-turbo"},
+		{ID: "session1", Title: "Test Session 1", Model: "gpt-4", ProjectID: "proj1", Directory: "/home/user/project1"},
+		{ID: "session2", Title: "Test Session 2", Model: "gpt-3.5-turbo", ProjectID: "proj2", Directory: "/home/user/project2"},
 	}
 	return MockResponse(sessions)
 }
@@ -40,8 +40,9 @@ func MockSessionResponse() []byte {
 		Title:     "Test Session",
 		Model:     "gpt-4",
 		Agent:     "default",
-		CreatedAt: 1234567890,
-		UpdatedAt: 1234567890,
+		ProjectID: "proj1",
+		Directory: "/home/user/project1",
+		Time:      types.SessionTime{Created: 1234567890, Updated: 1234567890},
 	}
 	return MockResponse(session)
 }
@@ -66,6 +67,7 @@ func MockMessagesResponse() []byte {
 
 // MockMessageResponse 模拟单个消息响应
 func MockMessageResponse() []byte {
+	text := "Hello world"
 	msg := types.MessageWithParts{
 		Info: types.Message{
 			ID:        "msg1",
@@ -75,7 +77,7 @@ func MockMessageResponse() []byte {
 			CreatedAt: 1234567890,
 		},
 		Parts: []types.Part{
-		{Type: "text", Text: "Hello world"},
+			{Type: "text", Text: &text},
 		},
 	}
 	return MockResponse(msg)

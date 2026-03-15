@@ -109,8 +109,9 @@ func TestMessageAddCmd(t *testing.T) {
 				return
 			}
 
+			text := tt.content
 			parts := []types.Part{
-				{Type: "text", Text: tt.content},
+				{Type: "text", Text: &text},
 			}
 
 			req := types.MessageRequest{
@@ -163,8 +164,9 @@ func TestMessagePromptAsyncCmd(t *testing.T) {
 		},
 	}
 
+	text := "Async message"
 	parts := []types.Part{
-		{Type: "text", Text: "Async message"},
+		{Type: "text", Text: &text},
 	}
 
 	req := types.MessageRequest{
