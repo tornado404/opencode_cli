@@ -869,6 +869,12 @@ func outputSessions(sessions []types.Session) error {
 		if s.Agent != "" {
 			fmt.Printf("代理：   %s\n", s.Agent)
 		}
+		if s.Directory != "" {
+			fmt.Printf("目录：   %s\n", s.Directory)
+		}
+		if s.ProjectID != "" {
+			fmt.Printf("项目：   %s\n", s.ProjectID)
+		}
 		fmt.Println("---")
 	}
 
