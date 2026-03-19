@@ -115,7 +115,7 @@ func TestMessageAddCmd(t *testing.T) {
 			}
 
 			req := types.MessageRequest{
-				Model:   tt.model,
+				Model:   convertModel(tt.model),
 				Agent:   tt.agent,
 				NoReply: tt.noReply,
 				Parts:   parts,

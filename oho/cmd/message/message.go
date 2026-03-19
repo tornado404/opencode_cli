@@ -78,6 +78,27 @@ func init() {
 	shellCmd.Flags().StringVar(&shellCommand, "command", "", "Shell 命令")
 }
 
+// convertModel converts a model string to the appropriate format (string or object)
+func convertModel(model string) interface{} {
+	if model == "" {
+		return nil
+	}
+
+	// Check if the model string contains a colon, which indicates provider:model format
+	if strings.Contains(model, ":") {
+		parts := strings.SplitN(model, ":", 2)
+		if len(parts) == 2 {
+			return types.Model{
+				ProviderID: parts[0],
+				ModelID:    parts[1],
+			}
+		}
+	}
+
+	// If no colon, treat as simple string model (backward compatibility)
+	return model
+}
+
 // listCmd 列出消息
 var listCmd = &cobra.Command{
 	Use:   "list",
@@ -187,17 +208,13 @@ var addCmd = &cobra.Command{
 
 		req := types.MessageRequest{
 			MessageID: messageID,
-			Model:     model,
+			Model:     convertModel(model),
 			Agent:     agent,
 			NoReply:   noReply,
 			System:    systemPrompt,
 			Tools:     tools,
 			Parts:     parts,
 		}
-
-		// 调试输出：打印请求内容
-		reqJSON, _ := json.MarshalIndent(req, "", "  ")
-		fmt.Fprintf(os.Stderr, "DEBUG: 发送请求:\n%s\n", string(reqJSON))
 
 		resp, err := c.Post(ctx, fmt.Sprintf("/session/%s/message", sessionID), req)
 		if err != nil {
@@ -301,7 +318,7 @@ var promptAsyncCmd = &cobra.Command{
 
 		req := types.MessageRequest{
 			MessageID: messageID,
-			Model:     model,
+			Model:     convertModel(model),
 			Agent:     agent,
 			NoReply:   false,
 			System:    systemPrompt,
@@ -340,7 +357,7 @@ var commandCmd = &cobra.Command{
 		req := types.CommandRequest{
 			MessageID: messageID,
 			Agent:     agent,
-			Model:     model,
+			Model:     convertModel(model),
 			Command:   args[0],
 			Arguments: argMap,
 		}
@@ -401,7 +418,7 @@ var shellCmd = &cobra.Command{
 
 		req := types.ShellRequest{
 			Agent:   agent,
-			Model:   model,
+			Model:   convertModel(model),
 			Command: cmdStr,
 		}
 
@@ -438,7 +455,7 @@ var shellCmd = &cobra.Command{
 // detectMimeType 根据文件扩展名检测 MIME 类型
 func detectMimeType(filePath string) string {
 	ext := strings.ToLower(filePath[strings.LastIndex(filePath, "."):])
-	
+
 	mimeTypes := map[string]string{
 		// 图片
 		".jpg":  "image/jpeg",
@@ -448,7 +465,7 @@ func detectMimeType(filePath string) string {
 		".webp": "image/webp",
 		".bmp":  "image/bmp",
 		".svg":  "image/svg+xml",
-		
+
 		// 文档
 		".pdf":  "application/pdf",
 		".doc":  "application/msword",
@@ -457,7 +474,7 @@ func detectMimeType(filePath string) string {
 		".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 		".ppt":  "application/vnd.ms-powerpoint",
 		".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-		
+
 		// 文本
 		".txt":  "text/plain",
 		".md":   "text/markdown",
@@ -468,7 +485,7 @@ func detectMimeType(filePath string) string {
 		".xml":  "application/xml",
 		".yaml": "application/x-yaml",
 		".yml":  "application/x-yaml",
-		
+
 		// 代码
 		".py":   "text/x-python",
 		".go":   "text/x-go",
@@ -479,20 +496,20 @@ func detectMimeType(filePath string) string {
 		".rs":   "text/x-rust",
 		".ts":   "text/x-typescript",
 		".tsx":  "text/x-typescript",
-		
+
 		// 其他
-		".zip":  "application/zip",
-		".tar":  "application/x-tar",
-		".gz":   "application/gzip",
-		".mp3":  "audio/mpeg",
-		".mp4":  "video/mp4",
-		".wav":  "audio/wav",
+		".zip": "application/zip",
+		".tar": "application/x-tar",
+		".gz":  "application/gzip",
+		".mp3": "audio/mpeg",
+		".mp4": "video/mp4",
+		".wav": "audio/wav",
 	}
-	
+
 	if mimeType, ok := mimeTypes[ext]; ok {
 		return mimeType
 	}
-	
+
 	// 默认返回 octet-stream
 	return "application/octet-stream"
 }

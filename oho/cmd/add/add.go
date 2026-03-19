@@ -160,6 +160,27 @@ func createSession(c *client.Client, ctx context.Context, title, parentID, direc
 	return session.ID, nil
 }
 
+// convertModel converts a model string to the appropriate format (string or object)
+func convertModel(model string) interface{} {
+	if model == "" {
+		return nil
+	}
+	
+	// Check if the model string contains a colon, which indicates provider:model format
+	if strings.Contains(model, ":") {
+		parts := strings.SplitN(model, ":", 2)
+		if len(parts) == 2 {
+			return types.Model{
+				ProviderID: parts[0],
+				ModelID:    parts[1],
+			}
+		}
+	}
+	
+	// If no colon, treat as simple string model (backward compatibility)
+	return model
+}
+
 // sendMessage sends a message to the session and returns the message ID
 func sendMessage(c *client.Client, ctx context.Context, sessionID, message, agent, model string, noReply bool, system string, tools, files []string) (string, error) {
 	// Build message parts
@@ -201,7 +222,7 @@ func sendMessage(c *client.Client, ctx context.Context, sessionID, message, agen
 
 	// Build message request
 	msgReq := types.MessageRequest{
-		Model:   model,
+		Model:   convertModel(model),
 		Agent:   agent,
 		NoReply: noReply,
 		System:  system,

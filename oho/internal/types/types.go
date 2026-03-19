@@ -1,9 +1,9 @@
 package types
 
-// SessionTime 会话时间戳
-type SessionTime struct {
-	Created int64 `json:"created"`
-	Updated int64 `json:"updated"`
+// Model represents the model as an object with provider and model IDs
+type Model struct {
+	ProviderID string `json:"providerID"`
+	ModelID    string `json:"modelID"`
 }
 
 // Session 会话类型
@@ -14,18 +14,14 @@ type Session struct {
 	ProjectID string      `json:"projectId,omitempty"`
 	Directory string      `json:"directory,omitempty"`
 	Time      SessionTime `json:"time"`
-	Model     string      `json:"model"`
+	Model     interface{} `json:"model"`  // Can be string or Model object
 	Agent     string      `json:"agent"`
 }
 
-// CreatedAt 获取创建时间戳（兼容接口）
-func (s *Session) CreatedAt() int64 {
-	return s.Time.Created
-}
-
-// UpdatedAt 获取更新时间戳（兼容接口）
-func (s *Session) UpdatedAt() int64 {
-	return s.Time.Updated
+// SessionTime 会话时间戳
+type SessionTime struct {
+	Created int64 `json:"created"`
+	Updated int64 `json:"updated"`
 }
 
 // SessionStatus 会话状态
@@ -74,29 +70,29 @@ type MessageWithParts struct {
 
 // MessageRequest 消息请求
 type MessageRequest struct {
-	MessageID string   `json:"messageId,omitempty"`
-	Model     string   `json:"model,omitempty"`
-	Agent     string   `json:"agent,omitempty"`
-	NoReply   bool     `json:"noReply,omitempty"`
-	System    string   `json:"system,omitempty"`
-	Tools     []string `json:"tools,omitempty"`
-	Parts     []Part   `json:"parts"`
+	MessageID string      `json:"messageId,omitempty"`
+	Model     interface{} `json:"model,omitempty"`  // Can be string or Model object
+	Agent     string      `json:"agent,omitempty"`
+	NoReply   bool        `json:"noReply,omitempty"`
+	System    string      `json:"system,omitempty"`
+	Tools     []string    `json:"tools,omitempty"`
+	Parts     []Part      `json:"parts"`
 }
 
 // CommandRequest 命令请求
 type CommandRequest struct {
 	MessageID string            `json:"messageId,omitempty"`
 	Agent     string            `json:"agent,omitempty"`
-	Model     string            `json:"model,omitempty"`
+	Model     interface{}       `json:"model,omitempty"`  // Can be string or Model object
 	Command   string            `json:"command"`
 	Arguments map[string]string `json:"arguments,omitempty"`
 }
 
 // ShellRequest Shell 命令请求
 type ShellRequest struct {
-	Agent   string `json:"agent"`
-	Model   string `json:"model,omitempty"`
-	Command string `json:"command"`
+	Agent   string      `json:"agent"`
+	Model   interface{} `json:"model,omitempty"`  // Can be string or Model object
+	Command string      `json:"command"`
 }
 
 // Config 配置类型
