@@ -125,7 +125,11 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		fmt.Println(string(data))
 	} else {
 		fmt.Printf("Session created: %s\n", sessionID)
-		fmt.Printf("Message sent: %s\n", messageID)
+		if messageID != "" {
+			fmt.Printf("Message sent: %s\n", messageID)
+		} else {
+			fmt.Println("Message sent successfully")
+		}
 	}
 
 	return nil
@@ -212,7 +216,7 @@ func sendMessage(c *client.Client, ctx context.Context, sessionID, message, agen
 
 	// Handle empty response (no-reply mode)
 	if len(resp) == 0 {
-		return "pending", nil
+		return "", nil
 	}
 
 	var result types.MessageWithParts
