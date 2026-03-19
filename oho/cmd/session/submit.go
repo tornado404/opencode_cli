@@ -18,7 +18,7 @@ import (
 var submitCmd = &cobra.Command{
 	Use:   "submit [message]",
 	Short: "Submit a task by creating a session and sending a message in one step",
-	Long:  "Create a new session, optionally initialize it with AGENTS.md, and send a message in one command",
+	Long:  "Create a new session in current directory, optionally initialize it with AGENTS.md, and send a message in one command.\n\n注意：当前 OpenCode Server 可能会忽略 path 参数，会话目录由服务器决定。",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Step 1: Validate flags
@@ -36,9 +36,18 @@ var submitCmd = &cobra.Command{
 		if title != "" {
 			req["title"] = title
 		}
-		if directory != "" {
-			req["directory"] = directory
+
+		// 使用当前工作目录（如果用户未指定）
+		// 注意：API 参数名是 path 不是 directory
+		sessionPath := directory
+		if sessionPath == "" {
+			var err error
+			sessionPath, err = os.Getwd()
+			if err != nil {
+				return fmt.Errorf("failed to get current directory: %w", err)
+			}
 		}
+		req["path"] = sessionPath
 
 		resp, err := c.Post(ctx, "/session", req)
 		if err != nil {
