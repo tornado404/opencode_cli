@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/anomalyco/oho/cmd/add"
 	"github.com/anomalyco/oho/cmd/agent"
 	"github.com/anomalyco/oho/cmd/auth"
 	"github.com/anomalyco/oho/cmd/command"
@@ -89,6 +90,7 @@ func main() {
 
 	// 添加子命令
 	rootCmd.AddCommand(
+		add.Cmd,
 		global.Cmd,
 		project.Cmd,
 		session.Cmd,
