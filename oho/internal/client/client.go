@@ -135,6 +135,11 @@ func (c *Client) Post(ctx context.Context, path string, body interface{}) ([]byt
 	return c.Request(ctx, http.MethodPost, path, body)
 }
 
+// PostWithQuery 发送带查询参数的 POST 请求
+func (c *Client) PostWithQuery(ctx context.Context, path string, queryParams map[string]string, body interface{}) ([]byte, error) {
+	return c.RequestWithQuery(ctx, http.MethodPost, path, queryParams, body)
+}
+
 // Put 发送 PUT 请求
 func (c *Client) Put(ctx context.Context, path string, body interface{}) ([]byte, error) {
 	return c.Request(ctx, http.MethodPut, path, body)

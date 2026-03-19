@@ -18,7 +18,7 @@ import (
 var submitCmd = &cobra.Command{
 	Use:   "submit [message]",
 	Short: "Submit a task by creating a session and sending a message in one step",
-	Long:  "Create a new session in current directory, optionally initialize it with AGENTS.md, and send a message in one command.\n\n注意：当前 OpenCode Server 可能会忽略 path 参数，会话目录由服务器决定。",
+	Long:  "Create a new session in current directory, optionally initialize it with AGENTS.md, and send a message in one command.",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Step 1: Validate flags
@@ -32,24 +32,26 @@ var submitCmd = &cobra.Command{
 		ctx := context.Background()
 
 		// Step 2: Create session
+		// 根据 OpenCode SDK: directory 是 query 参数，不是 body 参数
+		// body 只支持 parentID 和 title
 		req := map[string]interface{}{}
 		if title != "" {
 			req["title"] = title
 		}
 
-		// 使用当前工作目录（如果用户未指定）
-		// 注意：API 参数名是 path 不是 directory
-		sessionPath := directory
-		if sessionPath == "" {
+		// 获取当前工作目录（如果用户未指定）
+		sessionDir := directory
+		if sessionDir == "" {
 			var err error
-			sessionPath, err = os.Getwd()
+			sessionDir, err = os.Getwd()
 			if err != nil {
 				return fmt.Errorf("failed to get current directory: %w", err)
 			}
 		}
-		req["path"] = sessionPath
 
-		resp, err := c.Post(ctx, "/session", req)
+		// 使用 PostWithQuery 发送 directory 作为 query 参数
+		queryParams := map[string]string{"directory": sessionDir}
+		resp, err := c.PostWithQuery(ctx, "/session", queryParams, req)
 		if err != nil {
 			return fmt.Errorf("failed to create session: %w", err)
 		}
