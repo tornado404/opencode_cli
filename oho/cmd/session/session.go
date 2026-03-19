@@ -65,6 +65,7 @@ func init() {
 	Cmd.AddCommand(revertCmd)
 	Cmd.AddCommand(unrevertCmd)
 	Cmd.AddCommand(permissionsCmd)
+	Cmd.AddCommand(submitCmd)
 
 	// 全局会话标志
 	Cmd.PersistentFlags().StringVarP(&sessionID, "session", "s", "", "会话 ID")
