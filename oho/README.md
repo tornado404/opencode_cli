@@ -226,6 +226,32 @@ oho message command -s <session> /help  # Execute command
 oho message shell -s <session> --agent default "ls -la"  # Run shell
 ```
 
+### Quick Start (Session + Message)
+
+```bash
+oho add "帮我分析这个项目"                    # Create session and send message
+oho add "修复登录 bug" --title "Bug 修复"       # Create session with custom title
+oho add "测试功能" --no-reply --agent default  # Don't wait for AI response
+oho add "分析日志" --file /var/log/app.log     # Attach file to message
+oho add "任务描述" --directory /path/to/project # Specify working directory
+oho add "消息内容" --json                      # Output in JSON format
+```
+
+**`oho add` Flags**:
+
+| Flag | Type | Description | Default |
+|------|------|-------------|---------|
+| `--title` | string | Session title (auto-generated if not provided) | auto-generated |
+| `--parent` | string | Parent session ID (for creating sub-session) | - |
+| `--directory` | string | Working directory for the session | current directory |
+| `--agent` | string | Agent ID for message | - |
+| `--model` | string | Model ID for message (e.g., `provider:model`) | default model |
+| `--no-reply` | bool | Don't wait for AI response | false |
+| `--system` | string | System prompt | - |
+| `--tools` | string[] | Tools list (can be specified multiple times) | - |
+| `--file` | string[] | File attachments (can be specified multiple times) | - |
+| `-j, --json` | bool | Output in JSON format | false |
+
 ### Configuration Management
 
 ```bash
