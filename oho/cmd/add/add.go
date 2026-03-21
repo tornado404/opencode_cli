@@ -136,7 +136,8 @@ func runAdd(cmd *cobra.Command, args []string) error {
 }
 
 // createSession creates a new session and returns the session ID
-func createSession(c *client.Client, ctx context.Context, title, parentID, directory string) (string, error) {
+// createSession creates a new session and returns the session ID
+func createSession(c client.ClientInterface, ctx context.Context, title, parentID, directory string) (string, error) {
 	req := map[string]interface{}{}
 	if title != "" {
 		req["title"] = title
@@ -182,7 +183,8 @@ func convertModel(model string) interface{} {
 }
 
 // sendMessage sends a message to the session and returns the message ID
-func sendMessage(c *client.Client, ctx context.Context, sessionID, message, agent, model string, noReply bool, system string, tools, files []string) (string, error) {
+// sendMessage sends a message to the session and returns the message ID
+func sendMessage(c client.ClientInterface, ctx context.Context, sessionID, message, agent, model string, noReply bool, system string, tools, files []string) (string, error) {
 	// Build message parts
 	var parts []types.Part
 
@@ -250,7 +252,11 @@ func sendMessage(c *client.Client, ctx context.Context, sessionID, message, agen
 
 // detectMimeType detects MIME type based on file extension
 func detectMimeType(filePath string) string {
-	ext := strings.ToLower(filePath[strings.LastIndex(filePath, "."):])
+	dotIndex := strings.LastIndex(filePath, ".")
+	if dotIndex == -1 {
+		return "application/octet-stream"
+	}
+	ext := strings.ToLower(filePath[dotIndex:])
 
 	mimeTypes := map[string]string{
 		// Images

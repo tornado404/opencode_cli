@@ -17,13 +17,14 @@ func (e *APIError) Error() string {
 
 // MockClient implements ClientInterface for testing
 type MockClient struct {
-	GetFunc          func(ctx context.Context, path string) ([]byte, error)
-	GetWithQueryFunc func(ctx context.Context, path string, queryParams map[string]string) ([]byte, error)
-	PostFunc         func(ctx context.Context, path string, body interface{}) ([]byte, error)
-	PutFunc          func(ctx context.Context, path string, body interface{}) ([]byte, error)
-	PatchFunc        func(ctx context.Context, path string, body interface{}) ([]byte, error)
-	DeleteFunc       func(ctx context.Context, path string) ([]byte, error)
-	SSEStreamFunc    func(ctx context.Context, path string) (<-chan []byte, <-chan error, error)
+	GetFunc           func(ctx context.Context, path string) ([]byte, error)
+	GetWithQueryFunc  func(ctx context.Context, path string, queryParams map[string]string) ([]byte, error)
+	PostFunc          func(ctx context.Context, path string, body interface{}) ([]byte, error)
+	PutFunc           func(ctx context.Context, path string, body interface{}) ([]byte, error)
+	PatchFunc         func(ctx context.Context, path string, body interface{}) ([]byte, error)
+	DeleteFunc        func(ctx context.Context, path string) ([]byte, error)
+	PostWithQueryFunc func(ctx context.Context, path string, queryParams map[string]string, body interface{}) ([]byte, error)
+	SSEStreamFunc     func(ctx context.Context, path string) (<-chan []byte, <-chan error, error)
 }
 
 func (m *MockClient) Get(ctx context.Context, path string) ([]byte, error) {
@@ -64,6 +65,13 @@ func (m *MockClient) Patch(ctx context.Context, path string, body interface{}) (
 func (m *MockClient) Delete(ctx context.Context, path string) ([]byte, error) {
 	if m.DeleteFunc != nil {
 		return m.DeleteFunc(ctx, path)
+	}
+	return nil, nil
+}
+
+func (m *MockClient) PostWithQuery(ctx context.Context, path string, queryParams map[string]string, body interface{}) ([]byte, error) {
+	if m.PostWithQueryFunc != nil {
+		return m.PostWithQueryFunc(ctx, path, queryParams, body)
 	}
 	return nil, nil
 }
