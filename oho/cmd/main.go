@@ -64,11 +64,8 @@ func SetVersionInfo(ver, commit, date string) {
 	commitStr = commit
 	dateStr = date
 
-	if versionStr != "dev" {
-		rootCmd.Version = fmt.Sprintf("%s (commit: %s, built: %s)", versionStr, commitStr, dateStr)
-	} else {
-		rootCmd.Version = versionStr
-	}
+	// 始终显示完整版本信息，包括 dev/dirty 版本
+	rootCmd.Version = fmt.Sprintf("%s (commit: %s, built: %s)", versionStr, commitStr, dateStr)
 }
 
 func main() {
