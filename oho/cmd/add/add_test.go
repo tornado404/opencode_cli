@@ -284,6 +284,7 @@ func TestSendMessage(t *testing.T) {
 			noReply:   false,
 			mockResp:  testutil.MockMessageResponse(),
 			wantErr:   false,
+			wantMsgID: "msg1",
 		},
 		{
 			name:      "success with model specified",
@@ -294,6 +295,7 @@ func TestSendMessage(t *testing.T) {
 			noReply:   false,
 			mockResp:  testutil.MockMessageResponse(),
 			wantErr:   false,
+			wantMsgID: "msg1",
 		},
 		{
 			name:      "no-reply mode returns empty message ID",
