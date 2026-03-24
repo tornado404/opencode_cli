@@ -21,6 +21,7 @@ type Client struct {
 	httpClient *http.Client
 	username   string
 	password   string
+	timeoutSec int
 }
 
 // NewClient 创建新的 API 客户端
@@ -40,6 +41,7 @@ func NewClient() *Client {
 		baseURL:  config.GetBaseURL(),
 		username: cfg.Username,
 		password: cfg.Password,
+		timeoutSec: timeoutSec,
 		httpClient: &http.Client{
 			Timeout: time.Duration(timeoutSec) * time.Second,
 		},
@@ -77,6 +79,10 @@ func (c *Client) Request(ctx context.Context, method, path string, body interfac
 	// 发送请求
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		// 检查是否是超时错误
+		if strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "Client.Timeout exceeded") {
+			return nil, fmt.Errorf("请求超时（%d 秒）\n\n建议:\n  1. 使用 --no-reply 参数避免等待\n  2. 设置环境变量增加超时：export OPENCODE_CLIENT_TIMEOUT=600\n  3. 使用异步命令：oho message prompt-async -s <session-id> \"任务\"", c.timeoutSec)
+		}
 		return nil, fmt.Errorf("请求失败：%w", err)
 	}
 	defer resp.Body.Close()

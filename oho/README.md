@@ -237,6 +237,45 @@ oho add "任务描述" --directory /path/to/project # Specify working directory
 oho add "消息内容" --json                      # Output in JSON format
 ```
 
+### ⚠️ Timeout Considerations
+
+The `oho add` command waits for the AI response by default. For complex tasks, the AI may need extended time to think, which could result in a timeout.
+
+**Methods to Avoid Timeouts**:
+
+1. **Use `--no-reply` flag** (Recommended):
+   ```bash
+   # Send message and return immediately without waiting for AI response
+   oho add "Analyze project structure" --no-reply
+   
+   # Check results later
+   oho message list -s <session-id>
+   ```
+
+2. **Increase timeout duration**:
+   ```bash
+   # Set timeout to 10 minutes (600 seconds)
+   export OPENCODE_CLIENT_TIMEOUT=600
+   oho add "Complex task"
+   
+   # Or set temporarily
+   OPENCODE_CLIENT_TIMEOUT=600 oho add "Complex task"
+   ```
+
+3. **Use async command**:
+   ```bash
+   # Create session first
+   oho session create --title "Task"
+   
+   # Send message asynchronously
+   oho message prompt-async -s <session-id> "Task description"
+   ```
+
+**Timeout Configuration**:
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `OPENCODE_CLIENT_TIMEOUT` | 300 seconds | HTTP request timeout (seconds) |
+
 **`oho add` Flags**:
 
 | Flag | Type | Description | Default |

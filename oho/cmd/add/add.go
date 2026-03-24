@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,7 +20,7 @@ import (
 var (
 	addTitle      string
 	addParent     string
-	addAgent      string
+	addAgent      = "sisyphus"
 	addModel      string
 	addNoReply    bool
 	addSystem     string
@@ -27,6 +28,7 @@ var (
 	addFiles      []string
 	addDirectory  string
 	addJSONOutput bool
+	addTimeout    int
 )
 
 // Cmd add 命令 - 创建会话并发送消息
@@ -42,7 +44,7 @@ generates an automatic title.
 Examples:
   oho add "帮我分析这个项目"
   oho add "修复登录 bug" --title "Bug 修复"
-  oho add "测试功能" --no-reply --agent default
+  oho add "测试功能" --no-reply
   oho add "分析日志" --file /var/log/app.log`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runAdd,
@@ -55,18 +57,26 @@ func init() {
 	Cmd.Flags().StringVar(&addDirectory, "directory", "", "Working directory for the session (default: current directory)")
 
 	// Message-related flags
-	Cmd.Flags().StringVar(&addAgent, "agent", "", "Agent ID for message")
+	Cmd.Flags().StringVar(&addAgent, "agent", "sisyphus", "Agent ID for message (default: sisyphus)")
 	Cmd.Flags().StringVar(&addModel, "model", "", "Model ID for message")
 	Cmd.Flags().BoolVar(&addNoReply, "no-reply", false, "Don't wait for AI response")
 	Cmd.Flags().StringVar(&addSystem, "system", "", "System prompt")
 	Cmd.Flags().StringSliceVar(&addTools, "tools", nil, "Tools list (can be specified multiple times)")
 	Cmd.Flags().StringSliceVar(&addFiles, "file", nil, "File attachments (can be specified multiple times)")
 
+	// Timeout flag
+	Cmd.Flags().IntVar(&addTimeout, "timeout", 0, "Request timeout in seconds (0 uses default 300s)")
+
 	// Output format
 	Cmd.Flags().BoolVarP(&addJSONOutput, "json", "j", false, "Output in JSON format")
 }
 
 func runAdd(cmd *cobra.Command, args []string) error {
+	// Apply timeout if specified
+	if addTimeout > 0 {
+		os.Setenv("OPENCODE_CLIENT_TIMEOUT", strconv.Itoa(addTimeout))
+	}
+
 	c := client.NewClient()
 	ctx := context.Background()
 

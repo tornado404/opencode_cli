@@ -1,12 +1,12 @@
 # OpenCode Server API 技能手册
 
-> **版本**: v4.5.0 | **Server**: v1.2.15 | **oho CLI**: v1.1.0
+> **版本**: v4.5.0 | **Server**: v1.2.15 | **oho CLI**: v1.1.0+
 > 
 > **⚠️ 重要**: 所有 OpenCode 操作必须通过 **oho CLI** 发送，不再直接使用 Python SDK 或 curl。
 
 ---
 
-## 🚫 Telegram 消息规范（重要）
+## 🚫 消息规范（重要）
 
 **禁止发送的内容**:
 - ❌ 不要发送"有更新"、"技能已更新"等通知类消息
@@ -22,7 +22,7 @@
 ```
 ✅ 任务已提交
 会话：ses_xxx
-项目：babylon3DWorld
+项目：gpt
 ```
 
 ---
@@ -35,7 +35,8 @@
 # 最常用：一条命令完成会话创建 + 消息发送
 oho add "任务描述" --directory /mnt/d/fe/project --no-reply
 
-# 指定 Agent
+# 指定 Agent（可选，默认为 Sisyphus）
+oho add "@hephaestus 分析性能瓶颈" --directory /mnt/d/fe/project --no-reply
 oho add "@hephaestus 分析性能瓶颈" --directory /mnt/d/fe/project --no-reply
 
 # 指定标题
@@ -43,6 +44,10 @@ oho add "修复登录 bug" --title "Bug 修复" --directory /mnt/d/fe/project --
 
 # 附加文件
 oho add "分析日志" --file /var/log/app.log --directory /mnt/d/fe/project --no-reply
+
+# 使用 session submit（功能更完整，支持项目初始化）
+oho session submit "任务描述" --directory /mnt/d/fe/project --no-reply
+oho session submit "初始化项目并分析" --init-project --provider anthropic --model claude-sonnet-4-5-20250929 --directory /mnt/d/fe/project
 ```
 
 ### 关键参数
@@ -52,7 +57,7 @@ oho add "分析日志" --file /var/log/app.log --directory /mnt/d/fe/project --n
 | `--title` | string | 会话标题（不提供则自动生成） | 自动生成 |
 | `--parent` | string | 父会话 ID（用于创建子会话） | - |
 | `--directory` | string | 会话工作目录 | 当前目录 |
-| `--agent` | string | 消息的 Agent ID | - |
+| `--agent` | string | 消息的 Agent ID | sisyphus |
 | `--model` | string | 消息的模型 ID（如 `provider:model`） | 默认模型 |
 | `--no-reply` | bool | 不等待 AI 响应 | false |
 | `--system` | string | 系统提示词 | - |
@@ -101,7 +106,8 @@ oho session list -j
 oho session create
 oho session create --title "名称"
 oho session create --parent ses_xxx    # 创建子会话
-oho session create --path /path        # 在指定目录创建
+# 注意：session create 没有 --path 参数，目录由当前工作目录决定
+# 如需指定目录，使用：oho add --directory /path 或 oho session submit --directory /path
 
 # 获取会话详情
 oho session get <id>
@@ -140,6 +146,9 @@ oho session permissions <id> <perm-id> --response allow
 
 # 删除会话
 oho session delete ses_xxx
+
+# 提交任务（一键创建会话并发送消息）
+oho session submit "任务描述" --directory /path/to/project
 ```
 
 ### 消息管理
@@ -174,13 +183,13 @@ oho project list
 oho project current
 
 # 获取当前路径
-oho path
+oho project path
 
 # 获取 VCS 信息
 oho vcs
 
 # 处置当前实例
-oho instance dispose
+oho project dispose
 ```
 
 ### 全局命令
@@ -289,10 +298,10 @@ oho auth set <provider> --credentials key=value
 
 ```bash
 # ✅ 正确：异步提交
-oho add "任务" --directory /mnt/d/fe/project --no-reply
+oho add "任务" --directory /mnt/d/fe/projectA --no-reply
 
 # ❌ 错误：同步等待（可能超时）
-oho add "任务" --directory /mnt/d/fe/project
+oho add "任务" --directory /mnt/d/fe/projectA
 ```
 
 **后台轮询等待完成**（可选）:
@@ -366,13 +375,13 @@ echo "✅ 所有任务已提交"
 echo $OPENCODE_SERVER_PASSWORD
 
 # 或命令行指定
-oho --password cs516123456 session list
+oho --password your-password session list
 ```
 
 ### Session not found
 ```bash
 # 重新创建会话
-oho session create --path /mnt/d/fe/babylon3DWorld
+oho session create --path /mnt/d/fe/abc
 ```
 
 ### 任务超时
