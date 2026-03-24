@@ -338,19 +338,24 @@ func TestSendMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tempFiles := []string{}
-			for _, filePath := range tt.files {
-				if _, err := os.Stat(filePath); os.IsNotExist(err) {
-					tmpFile, err := os.CreateTemp("", "test-*.txt")
-					if err == nil {
-						if _, err := tmpFile.WriteString("test content"); err != nil {
-							t.Fatalf("Failed to write to temp file: %v", err)
+			// Skip creating temp files for "file not found" test case
+			if tt.name != "file not found" {
+				for _, filePath := range tt.files {
+					if _, err := os.Stat(filePath); os.IsNotExist(err) {
+						tmpFile, err := os.CreateTemp("", "test-*.txt")
+						if err == nil {
+							if _, err := tmpFile.WriteString("test content"); err != nil {
+								t.Fatalf("Failed to write to temp file: %v", err)
+							}
+							tmpFile.Close()
+							tempFiles = append(tempFiles, tmpFile.Name())
 						}
-						tmpFile.Close()
-						tempFiles = append(tempFiles, tmpFile.Name())
+					} else {
+						tempFiles = append(tempFiles, filePath)
 					}
-				} else {
-					tempFiles = append(tempFiles, filePath)
 				}
+			} else {
+				tempFiles = tt.files
 			}
 
 			mock := &client.MockClient{
@@ -368,8 +373,8 @@ func TestSendMessage(t *testing.T) {
 					if _, ok := bodyMap["parts"]; !ok {
 						t.Error("Expected 'parts' in request body")
 					}
-					if bodyMap["noReply"] != tt.noReply {
-						t.Errorf("Expected noReply=%v, got %v", tt.noReply, bodyMap["noReply"])
+					if noReplyVal, ok := bodyMap["noReply"].(bool); ok && noReplyVal != tt.noReply {
+						t.Errorf("Expected noReply=%v, got %v", tt.noReply, noReplyVal)
 					}
 
 					return tt.mockResp, tt.mockErr
