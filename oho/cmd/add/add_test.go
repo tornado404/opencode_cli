@@ -207,7 +207,9 @@ func TestCreateSession(t *testing.T) {
 
 					bodyBytes, _ := json.Marshal(body)
 					var bodyMap map[string]interface{}
-					json.Unmarshal(bodyBytes, &bodyMap)
+					if err := json.Unmarshal(bodyBytes, &bodyMap); err != nil {
+						t.Fatalf("Failed to unmarshal request body: %v", err)
+					}
 
 					if tt.title != "" {
 						if _, ok := bodyMap["title"]; !ok {
@@ -340,7 +342,9 @@ func TestSendMessage(t *testing.T) {
 				if _, err := os.Stat(filePath); os.IsNotExist(err) {
 					tmpFile, err := os.CreateTemp("", "test-*.txt")
 					if err == nil {
-						tmpFile.WriteString("test content")
+						if _, err := tmpFile.WriteString("test content"); err != nil {
+							t.Fatalf("Failed to write to temp file: %v", err)
+						}
 						tmpFile.Close()
 						tempFiles = append(tempFiles, tmpFile.Name())
 					}
@@ -357,7 +361,9 @@ func TestSendMessage(t *testing.T) {
 
 					bodyBytes, _ := json.Marshal(body)
 					var bodyMap map[string]interface{}
-					json.Unmarshal(bodyBytes, &bodyMap)
+					if err := json.Unmarshal(bodyBytes, &bodyMap); err != nil {
+						t.Fatalf("Failed to unmarshal request body: %v", err)
+					}
 
 					if _, ok := bodyMap["parts"]; !ok {
 						t.Error("Expected 'parts' in request body")
