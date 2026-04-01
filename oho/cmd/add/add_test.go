@@ -298,14 +298,14 @@ func TestSendMessage(t *testing.T) {
 			wantMsgID: "msg1",
 		},
 		{
-			name:      "no-reply mode returns empty message ID",
+			name:      "no-reply mode uses prompt_async endpoint and returns session ID as reference",
 			sessionID: "ses_test123",
 			message:   "Hello",
 			noReply:   true,
 			mockResp:  []byte{},
 			mockErr:   nil,
 			wantErr:   false,
-			wantMsgID: "",
+			wantMsgID: "ses_test123", // Returns session ID as reference for async mode
 		},
 		{
 			name:            "API error - server unavailable",
@@ -362,8 +362,13 @@ func TestSendMessage(t *testing.T) {
 
 			mock := &client.MockClient{
 				PostFunc: func(ctx context.Context, path string, body interface{}) ([]byte, error) {
-					if path != "/session/"+tt.sessionID+"/message" {
-						t.Errorf("Expected path /session/%s/message, got %s", tt.sessionID, path)
+					// For no-reply mode, uses /prompt_async endpoint; otherwise uses /message
+					expectedPath := "/session/" + tt.sessionID + "/message"
+					if tt.noReply {
+						expectedPath = "/session/" + tt.sessionID + "/prompt_async"
+					}
+					if path != expectedPath {
+						t.Errorf("Expected path %s, got %s", expectedPath, path)
 					}
 
 					bodyBytes, _ := json.Marshal(body)
@@ -375,8 +380,21 @@ func TestSendMessage(t *testing.T) {
 					if _, ok := bodyMap["parts"]; !ok {
 						t.Error("Expected 'parts' in request body")
 					}
-					if noReplyVal, ok := bodyMap["noReply"].(bool); ok && noReplyVal != tt.noReply {
-						t.Errorf("Expected noReply=%v, got %v", tt.noReply, noReplyVal)
+
+					// For no-reply mode, noReply should be false (server handles async internally)
+					if tt.noReply {
+						if noReplyVal, ok := bodyMap["noReply"].(bool); ok && noReplyVal {
+							t.Errorf("Expected noReply=false for prompt_async, got %v", noReplyVal)
+						}
+					} else {
+						if noReplyVal, ok := bodyMap["noReply"].(bool); ok && noReplyVal != tt.noReply {
+							t.Errorf("Expected noReply=%v, got %v", tt.noReply, noReplyVal)
+						}
+					}
+
+					// Verify agent field matches expected value
+					if agentVal, ok := bodyMap["agent"].(string); ok && agentVal != tt.agent {
+						t.Errorf("Expected agent=%q, got %q", tt.agent, agentVal)
 					}
 
 					return tt.mockResp, tt.mockErr

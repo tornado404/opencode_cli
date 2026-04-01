@@ -20,7 +20,7 @@ import (
 var (
 	addTitle      string
 	addParent     string
-	addAgent      = "sisyphus"
+	addAgent      = "" // 默认空字符串，与 prompt-async 保持一致
 	addModel      string
 	addNoReply    bool
 	addSystem     string
@@ -57,7 +57,7 @@ func init() {
 	Cmd.Flags().StringVar(&addDirectory, "directory", "", "Working directory for the session (default: current directory)")
 
 	// Message-related flags
-	Cmd.Flags().StringVar(&addAgent, "agent", "sisyphus", "Agent ID for message (default: sisyphus)")
+	Cmd.Flags().StringVar(&addAgent, "agent", "", "Agent ID for message")
 	Cmd.Flags().StringVar(&addModel, "model", "", "Model ID for message")
 	Cmd.Flags().BoolVar(&addNoReply, "no-reply", false, "Don't wait for AI response")
 	Cmd.Flags().StringVar(&addSystem, "system", "", "System prompt")
@@ -136,7 +136,11 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	} else {
 		fmt.Printf("Session created: %s\n", sessionID)
 		if messageID != "" {
-			fmt.Printf("Message sent: %s\n", messageID)
+			if addNoReply {
+				fmt.Printf("Message sent (async): %s\n", messageID)
+			} else {
+				fmt.Printf("Message sent: %s\n", messageID)
+			}
 		} else {
 			fmt.Println("Message sent successfully")
 		}
@@ -176,7 +180,7 @@ func convertModel(model string) interface{} {
 	if model == "" {
 		return nil
 	}
-	
+
 	// Check if the model string contains a colon, which indicates provider:model format
 	if strings.Contains(model, ":") {
 		parts := strings.SplitN(model, ":", 2)
@@ -187,13 +191,13 @@ func convertModel(model string) interface{} {
 			}
 		}
 	}
-	
+
 	// If no colon, treat as simple string model (backward compatibility)
 	return model
 }
 
 // sendMessage sends a message to the session and returns the message ID
-// sendMessage sends a message to the session and returns the message ID
+// For no-reply mode, it uses the dedicated /prompt_async endpoint
 func sendMessage(c client.ClientInterface, ctx context.Context, sessionID, message, agent, model string, noReply bool, system string, tools, files []string) (string, error) {
 	// Build message parts
 	var parts []types.Part
@@ -242,13 +246,27 @@ func sendMessage(c client.ClientInterface, ctx context.Context, sessionID, messa
 		Parts:   parts,
 	}
 
-	resp, err := c.Post(ctx, fmt.Sprintf("/session/%s/message", sessionID), msgReq)
+	// Determine endpoint based on noReply flag
+	// For no-reply mode, use the dedicated /prompt_async endpoint
+	// which is designed for async message handling
+	endpoint := fmt.Sprintf("/session/%s/message", sessionID)
+	if noReply {
+		endpoint = fmt.Sprintf("/session/%s/prompt_async", sessionID)
+		// For async endpoint, always set noReply to false (server handles async internally)
+		msgReq.NoReply = false
+	}
+
+	resp, err := c.Post(ctx, endpoint, msgReq)
 	if err != nil {
 		return "", fmt.Errorf("API request failed: %w", err)
 	}
 
 	// Handle empty response (no-reply mode)
 	if len(resp) == 0 {
+		// For no-reply mode, return session ID as reference since message ID is not available
+		if noReply {
+			return sessionID, nil
+		}
 		return "", nil
 	}
 
