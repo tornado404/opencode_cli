@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
 
 	"github.com/spf13/pflag"
@@ -32,27 +33,36 @@ func Init() error {
 		JSON:     false,
 	}
 
-	// 2. 检查配置文件是否存在
-	configFile := getConfigPath()
-	if data, err := os.ReadFile(configFile); err == nil {
-		// 配置文件存在，加载配置
-		if err := json.Unmarshal(data, cfg); err != nil {
-			return fmt.Errorf("解析配置文件失败：%w", err)
+	// 2. 加载配置文件（尝试多个可能的位置）
+	configFile := findConfigFile()
+	if configFile != "" {
+		if data, err := os.ReadFile(configFile); err == nil {
+			fmt.Fprintf(os.Stderr, "[config] 成功读取配置文件: %s\n", configFile)
+			if err := json.Unmarshal(data, cfg); err != nil {
+				return fmt.Errorf("解析配置文件失败：%w", err)
+			}
 		}
 	} else {
-		// 3. 配置文件不存在时，使用环境变量
-		if envHost := os.Getenv("OPENCODE_SERVER_HOST"); envHost != "" {
-			cfg.Host = envHost
+		fmt.Fprintf(os.Stderr, "[config] 配置文件不存在，请创建或设置环境变量\n")
+		fmt.Fprintf(os.Stderr, "[config] 尝试过的路径:\n")
+		for _, p := range getConfigSearchPaths() {
+			fmt.Fprintf(os.Stderr, "[config]   - %s\n", p)
 		}
-		if envPort := os.Getenv("OPENCODE_SERVER_PORT"); envPort != "" {
-			_, _ = fmt.Sscanf(envPort, "%d", &cfg.Port)
-		}
-		if envUsername := os.Getenv("OPENCODE_SERVER_USERNAME"); envUsername != "" {
-			cfg.Username = envUsername
-		}
-		if envPassword := os.Getenv("OPENCODE_SERVER_PASSWORD"); envPassword != "" {
-			cfg.Password = envPassword
-		}
+	}
+
+	// 3. 环境变量覆盖配置文件（始终检查，作为中间优先级）
+	// 优先级：命令行标志 > 环境变量 > 配置文件 > 默认值
+	if envHost := os.Getenv("OPENCODE_SERVER_HOST"); envHost != "" {
+		cfg.Host = envHost
+	}
+	if envPort := os.Getenv("OPENCODE_SERVER_PORT"); envPort != "" {
+		_, _ = fmt.Sscanf(envPort, "%d", &cfg.Port)
+	}
+	if envUsername := os.Getenv("OPENCODE_SERVER_USERNAME"); envUsername != "" {
+		cfg.Username = envUsername
+	}
+	if envPassword := os.Getenv("OPENCODE_SERVER_PASSWORD"); envPassword != "" {
+		cfg.Password = envPassword
 	}
 
 	return nil
@@ -101,8 +111,68 @@ func Save() error {
 	return os.WriteFile(configFile, data, 0600)
 }
 
-// getConfigPath 获取配置文件路径
+// getConfigSearchPaths 返回所有可能配置文件的搜索路径
+func getConfigSearchPaths() []string {
+	var paths []string
+
+	// 方式1: 操作系统用户数据库中的真实主目录（不受环境变量影响）
+	if usr, err := user.Current(); err == nil && usr.HomeDir != "" {
+		paths = append(paths, filepath.Join(usr.HomeDir, ".config", "oho", "config.json"))
+	}
+
+	// 方式2: os.UserHomeDir()（某些情况下会读取 HOME 环境变量）
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		paths = append(paths, filepath.Join(home, ".config", "oho", "config.json"))
+	}
+
+	// 方式3: $HOME 环境变量
+	if home := os.Getenv("HOME"); home != "" {
+		paths = append(paths, filepath.Join(home, ".config", "oho", "config.json"))
+	}
+
+	// 方式4: $USERPROFILE (Windows)
+	if home := os.Getenv("USERPROFILE"); home != "" {
+		paths = append(paths, filepath.Join(home, ".config", "oho", "config.json"))
+	}
+
+	// 方式5: 相对于当前工作目录
+	paths = append(paths, filepath.Join(".", ".config", "oho", "config.json"))
+
+	// 去重
+	seen := make(map[string]bool)
+	var unique []string
+	for _, p := range paths {
+		if !seen[p] {
+			seen[p] = true
+			unique = append(unique, p)
+		}
+	}
+	return unique
+}
+
+// findConfigFile 查找配置文件，返回第一个存在的路径
+func findConfigFile() string {
+	for _, p := range getConfigSearchPaths() {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+	return ""
+}
+
+// getConfigPath 获取配置文件路径（用于保存）
 func getConfigPath() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "oho", "config.json")
+	// 优先使用 os.UserHomeDir() 对应的路径
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		return filepath.Join(home, ".config", "oho", "config.json")
+	}
+	// fallback 到 $HOME
+	if home := os.Getenv("HOME"); home != "" {
+		return filepath.Join(home, ".config", "oho", "config.json")
+	}
+	// fallback 到 $USERPROFILE
+	if home := os.Getenv("USERPROFILE"); home != "" {
+		return filepath.Join(home, ".config", "oho", "config.json")
+	}
+	return filepath.Join(".", ".config", "oho", "config.json")
 }
