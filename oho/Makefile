@@ -26,8 +26,9 @@ build-dev:
 # Build for Linux (Ubuntu)
 build-linux:
 	@echo "Building $(BINARY_NAME) for Linux..."
-	@GOOS=linux GOARCH=amd64 go build -o $(BUILD_DIR)/$(BINARY_NAME)-linux $(CMD_PATH)
+	@GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.Date=$(DATE)" -o $(BUILD_DIR)/$(BINARY_NAME)-linux $(CMD_PATH)
 	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)-linux"
+	@$(BUILD_DIR)/$(BINARY_NAME)-linux --version
 
 # Build for Linux with version info
 build-linux-version:

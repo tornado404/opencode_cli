@@ -120,14 +120,63 @@ set -e
 
 ---
 
+## oho 项目构建指南
+
+oho 是用 Go 编写的 CLI 工具，位于 `oho/` 子目录。
+
+### ⚠️ 重要：构建命令必须包含 ldflags
+
+oho 使用 ldflags 注入版本信息。**必须使用以下格式**，否则版本信息会显示为 `commit: none, built: unknown`：
+
+```bash
+# 正确：包含完整 ldflags
+VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+go build -ldflags "-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.Date=${DATE}" -o bin/oho ./cmd
+
+# 错误：缺少 ldflags（版本信息会丢失）
+go build -o bin/oho ./cmd
+```
+
+### 推荐使用 Makefile
+
+```bash
+cd oho
+
+# 本地构建（推荐）
+make build
+
+# Linux 交叉编译
+make build-linux
+
+# 开发模式（无版本信息）
+make build-dev
+```
+
+### 验证构建
+
+```bash
+./bin/oho --version
+# 应该显示: oho version v1.x.x (commit: xxxxx, built: YYYY-MM-DDThh:mm:ssZ)
+# 而不是:    oho version dev (commit: none, built: unknown)
+```
+
+---
+
 ## 项目结构
 
 ```
 opencode_cli/
-├── scripts/           # Python/Shell 脚本
+├── oho/                    # Go CLI 项目 (主项目)
+│   ├── cmd/                # 命令入口
+│   ├── internal/           # 内部包
+│   ├── Makefile           # 构建目标
+│   └── README.md           # oho 详细文档
+├── scripts/               # Python/Shell 脚本
 │   ├── opencode-submit.py
 │   └── opencode-test.py
-└── AGENTS.md          # 本文件
+└── AGENTS.md              # 本文件
 ```
 
 ---
