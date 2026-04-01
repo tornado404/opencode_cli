@@ -104,8 +104,14 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          VERSION: ${{ github.sha }}
+          COMMIT: ${{ github.sha }}
+          DATE: ${{ github.event.head_commit.timestamp }}
         run: |
-          go build -ldflags="-s -w" -o bin/${APP_NAME}-${GOOS}-${GOARCH}${{ matrix.goos == 'windows' && '.exe' || '' }} ./cmd
+          VERSION=$(echo ${GITHUB_SHA::8}) && \
+          COMMIT=${GITHUB_SHA::8} && \
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) && \
+          go build -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.Date=${DATE}" -o bin/${APP_NAME}-${GOOS}-${GOARCH}${{ matrix.goos == 'windows' && '.exe' || '' }} ./cmd
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -144,7 +150,10 @@ jobs:
           GOARCH: amd64
         run: |
           mkdir -p dist
-          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-linux-amd64" ./cmd
+          VERSION=${GITHUB_REF#refs/tags/} && \
+          COMMIT=${GITHUB_SHA::8} && \
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) && \
+          go build -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.Date=${DATE}" -o "dist/${{ env.APP_NAME }}-linux-amd64" ./cmd
           cd dist && sha256sum ${{ env.APP_NAME }}-linux-amd64 > ${{ env.APP_NAME }}-linux-amd64.sha256
 
       - name: Build Linux arm64
@@ -154,7 +163,10 @@ jobs:
           GOARCH: arm64
         run: |
           mkdir -p dist
-          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-linux-arm64" ./cmd
+          VERSION=${GITHUB_REF#refs/tags/} && \
+          COMMIT=${GITHUB_SHA::8} && \
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) && \
+          go build -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.Date=${DATE}" -o "dist/${{ env.APP_NAME }}-linux-arm64" ./cmd
           cd dist && sha256sum ${{ env.APP_NAME }}-linux-arm64 > ${{ env.APP_NAME }}-linux-arm64.sha256
 
       - name: Build Windows amd64
@@ -164,7 +176,10 @@ jobs:
           GOARCH: amd64
         run: |
           mkdir -p dist
-          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-windows-amd64.exe" ./cmd
+          VERSION=${GITHUB_REF#refs/tags/} && \
+          COMMIT=${GITHUB_SHA::8} && \
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) && \
+          go build -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.Date=${DATE}" -o "dist/${{ env.APP_NAME }}-windows-amd64.exe" ./cmd
           cd dist && sha256sum ${{ env.APP_NAME }}-windows-amd64.exe > ${{ env.APP_NAME }}-windows-amd64.exe.sha256
 
       - name: Build macOS amd64
@@ -174,7 +189,10 @@ jobs:
           GOARCH: amd64
         run: |
           mkdir -p dist
-          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-darwin-amd64" ./cmd
+          VERSION=${GITHUB_REF#refs/tags/} && \
+          COMMIT=${GITHUB_SHA::8} && \
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) && \
+          go build -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.Date=${DATE}" -o "dist/${{ env.APP_NAME }}-darwin-amd64" ./cmd
           cd dist && sha256sum ${{ env.APP_NAME }}-darwin-amd64 > ${{ env.APP_NAME }}-darwin-amd64.sha256
 
       - name: Build macOS arm64
@@ -184,7 +202,10 @@ jobs:
           GOARCH: arm64
         run: |
           mkdir -p dist
-          go build -ldflags="-s -w -X main.Version=${GITHUB_REF#refs/tags/}" -o "dist/${{ env.APP_NAME }}-darwin-arm64" ./cmd
+          VERSION=${GITHUB_REF#refs/tags/} && \
+          COMMIT=${GITHUB_SHA::8} && \
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) && \
+          go build -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.Date=${DATE}" -o "dist/${{ env.APP_NAME }}-darwin-arm64" ./cmd
           cd dist && sha256sum ${{ env.APP_NAME }}-darwin-arm64 > ${{ env.APP_NAME }}-darwin-arm64.sha256
 
       - name: Upload Release Assets
