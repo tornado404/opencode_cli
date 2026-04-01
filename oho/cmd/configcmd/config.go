@@ -59,7 +59,24 @@ var (
 
 	setCmd = &cobra.Command{
 		Use:   "set",
-		Short: "更新配置",
+		Short: "更新配置（注意：部分配置项可能不被服务器 API 支持）",
+		Long: `更新 OpenCode 配置。
+
+注意：默认模型（--model）无法通过此命令设置，因为 OpenCode Server 的 
+/config PATCH 端点不支持 defaultModel 字段。
+
+如需设置默认模型，请编辑 OpenCode 配置文件：
+  - 全局配置：~/.config/opencode/opencode.json
+  - 项目配置：项目目录下的 opencode.json
+
+配置格式：
+{
+  "model": "provider/model-id",
+  "provider": "provider-id"
+}
+
+或者使用环境变量：
+  export OPENCODE_MODEL="provider/model-id"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := client.NewClient()
 			ctx := context.Background()
@@ -199,8 +216,8 @@ func init() {
 
 	setCmd.Flags().StringVar(&theme, "theme", "", "主题名称")
 	setCmd.Flags().StringVar(&language, "language", "", "语言设置")
-	setCmd.Flags().StringVar(&defaultModel, "model", "", "默认模型")
+	setCmd.Flags().StringVar(&defaultModel, "model", "", "默认模型（当前不支持，请使用配置文件设置）")
 	setCmd.Flags().IntVar(&maxTokens, "max-tokens", 0, "最大 Token 数")
 	setCmd.Flags().Float64Var(&temperature, "temperature", 0, "温度参数")
-	setCmd.Flags().StringSliceVar(&autoApprove, "auto-approve", nil, "自动批准的工具列表")
+	setCmd.Flags().StringSliceVar(&autoApprove, "auto-approve", nil, "自动批准的工具列表（注意：可能不被服务器支持）")
 }
