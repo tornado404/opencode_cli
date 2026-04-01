@@ -79,7 +79,9 @@ func TestGetBaseURL(t *testing.T) {
 	os.Unsetenv("OPENCODE_SERVER_USERNAME")
 	os.Unsetenv("OPENCODE_SERVER_PASSWORD")
 
-	Init()
+	if err := Init(); err != nil {
+		t.Fatalf("Init() returned error: %v", err)
+	}
 
 	baseURL := GetBaseURL()
 	expected := "http://127.0.0.1:4096"
@@ -96,7 +98,9 @@ func TestGetBaseURLWithCustomHostPort(t *testing.T) {
 		os.Unsetenv("OPENCODE_SERVER_PORT")
 	}()
 
-	Init()
+	if err := Init(); err != nil {
+		t.Fatalf("Init() returned error: %v", err)
+	}
 
 	baseURL := GetBaseURL()
 	expected := "http://10.0.0.1:3000"
