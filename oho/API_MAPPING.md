@@ -42,6 +42,7 @@
 |------|----------|------|------|
 | `oho session list` | `/session` | GET | 列出所有会话 |
 | `oho session create` | `/session` | POST | 创建新会话 |
+| `oho session submit <message>` | `/session` | POST | 创建会话并发送消息，一键提交任务 |
 | `oho session status` | `/session/status` | GET | 获取所有会话状态 |
 | `oho session get <id>` | `/session/:id` | GET | 获取会话详情 |
 | `oho session delete <id>` | `/session/:id` | DELETE | 删除会话 |
