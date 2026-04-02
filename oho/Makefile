@@ -1,4 +1,4 @@
-.PHONY: build build-dev build-linux build-linux-version test clean run
+.PHONY: build build-dev build-linux build-linux-version build-windows build-windows-arm64 test clean run
 
 # Variables
 BINARY_NAME=oho
@@ -36,6 +36,18 @@ build-linux-version:
 	@GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.Date=$(DATE)" -o $(BUILD_DIR)/$(BINARY_NAME)-linux $(CMD_PATH)
 	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)-linux"
 
+# Build for Windows (amd64)
+build-windows:
+	@echo "Building $(BINARY_NAME) for Windows..."
+	@GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.Date=$(DATE)" -o $(BUILD_DIR)/$(BINARY_NAME)-windows.exe $(CMD_PATH)
+	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)-windows.exe"
+
+# Build for Windows (arm64)
+build-windows-arm64:
+	@echo "Building $(BINARY_NAME) for Windows (arm64)..."
+	@GOOS=windows GOARCH=arm64 go build -ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.Date=$(DATE)" -o $(BUILD_DIR)/$(BINARY_NAME)-windows-arm64.exe $(CMD_PATH)
+	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)-windows-arm64.exe"
+
 # Run tests
 test:
 	@echo "Running tests..."
@@ -69,11 +81,13 @@ fmt:
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  build        - Build for current platform"
-	@echo "  build-linux  - Build for Linux (Ubuntu)"
-	@echo "  test         - Run tests"
-	@echo "  clean        - Clean build artifacts"
-	@echo "  run          - Run the CLI (use ARGS=*)"
-	@echo "  deps         - Install dependencies"
-	@echo "  lint         - Run linter"
-	@echo "  fmt          - Format code"
+	@echo "  build               - Build for current platform"
+	@echo "  build-linux         - Build for Linux (Ubuntu)"
+	@echo "  build-windows       - Build for Windows (amd64)"
+	@echo "  build-windows-arm64 - Build for Windows (arm64)"
+	@echo "  test                - Run tests"
+	@echo "  clean               - Clean build artifacts"
+	@echo "  run                 - Run the CLI (use ARGS=*)"
+	@echo "  deps                - Install dependencies"
+	@echo "  lint                - Run linter"
+	@echo "  fmt                 - Format code"

@@ -6,6 +6,22 @@
 
 set -e
 
+# 检测 Windows 环境 (Git Bash, MSYS, Cygwin)
+case "$(uname -s)" in
+    MINGW*|CYGWIN*|MSYS*)
+        echo "${YELLOW}检测到 Windows 环境${NC}"
+        echo ""
+        echo "请使用 PowerShell 安装 oho:"
+        echo "  irm https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/install.ps1 | iex"
+        echo ""
+        echo "或下载预编译二进制:"
+        echo "  https://github.com/tornado404/opencode_cli/releases"
+        echo ""
+        echo "安装 PowerShell 脚本后，请重启终端以使 PATH 生效。"
+        exit 0
+        ;;
+esac
+
 # 配置
 REPO_OWNER="tornado404"
 REPO_NAME="opencode_cli"
@@ -13,17 +29,16 @@ BINARY_NAME="oho"
 INSTALL_DIR="${HOME}/.local/bin"
 CONFIG_DIR="${HOME}/.config/oho"
 
-# 颜色定义 (使用 $'...' 语法使 ANSI 转义序列生效)
+# 颜色定义
 RED=$'\033[0;31m'
 GREEN=$'\033[0;32m'
 YELLOW=$'\033[1;33m'
-NC=$'\033[0m' # No Color
+NC=$'\033[0m'
 
 # 获取最新版本
 get_latest_version() {
     local version=""
     
-    # 尝试从 GitHub API 获取最新 release
     if command -v curl &> /dev/null; then
         version=$(curl -sSL https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest 2>/dev/null | grep -o '"tag_name":.*' | cut -d'"' -f4 | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || echo "")
     elif command -v wget &> /dev/null; then
@@ -59,13 +74,15 @@ detect_os_arch() {
             ;;
     esac
     
-    # 标准化 OS 名称
     case "$OS" in
         linux)
             OS="linux"
             ;;
         darwin)
             OS="darwin"
+            ;;
+        mingw*|cygwin*|msys*)
+            OS="windows"
             ;;
         *)
             echo "${RED}不支持的操作系统: $OS${NC}"
