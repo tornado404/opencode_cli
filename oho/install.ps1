@@ -313,7 +313,7 @@ function Build-FromSource {
 }
 
 # ============================================
-# 创建配置文件
+# 创建配置文件 (带随机密码)
 # ============================================
 function New-ConfigFile {
     if ($SkipConfig) {
@@ -331,21 +331,119 @@ function New-ConfigFile {
     # 检查配置文件是否已存在
     if (Test-Path $ConfigFile) {
         Write-Info "配置文件已存在: $ConfigFile"
-        return
+        
+        # 检查是否已有密码
+        try {
+            $ExistingConfig = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
+            if ($ExistingConfig.password) {
+                Write-Info "配置文件已包含密码"
+                return
+            }
+        }
+        catch {
+            Write-Warning "无法读取现有配置文件，将重新创建"
+        }
     }
 
-    # 创建默认配置
+    # 生成 8 位随机密码
+    $Password = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 8 | ForEach-Object { [char]$_ })
+    Write-Info "生成随机密码: ********"
+
+    # 创建默认配置 (包含随机密码)
     $ConfigContent = @{
         host = "127.0.0.1"
         port = 4096
         username = "opencode"
-        password = ""
+        password = $Password
         json = $false
     } | ConvertTo-Json -Depth 2
 
     $ConfigContent | Out-File -FilePath $ConfigFile -Encoding UTF8
 
     Write-Success "配置文件已创建: $ConfigFile"
+    Write-Host "   密码: $Password (请妥善保管)" -ForegroundColor Yellow
+}
+
+# ============================================
+# 检测并启动 OpenCode Server
+# ============================================
+function Start-OpenCodeServer {
+    Write-Info "检测 OpenCode Server 服务状态..."
+
+    # 检查 opencode 命令是否可用
+    $OhoCmd = Get-Command opencode -ErrorAction SilentlyContinue
+    if (-not $OhoCmd) {
+        # 尝试从默认安装目录查找
+        $DefaultPath = Join-Path $env:LOCALAPPDATA "Programs\oho\oho.exe"
+        if (Test-Path $DefaultPath) {
+            $env:PATH = "$((Split-Path $DefaultPath));$env:PATH"
+            $OhoCmd = Get-Command opencode -ErrorAction SilentlyContinue
+        }
+        
+        if (-not $OhoCmd) {
+            Write-Warning "opencode 命令不可用，跳过服务启动"
+            return
+        }
+    }
+
+    # 检查服务是否已运行
+    try {
+        $Response = Invoke-RestMethod -Uri "http://127.0.0.1:4096/health" -TimeoutSec 3 -ErrorAction SilentlyContinue
+        if ($Response) {
+            Write-Success "OpenCode Server 已在运行"
+            return
+        }
+    }
+    catch {
+        # 服务未运行，继续启动
+    }
+
+    Write-Info "OpenCode Server 未运行，准备启动..."
+
+    # 读取配置文件中的密码
+    $Password = ""
+    if (Test-Path $ConfigFile) {
+        try {
+            $Config = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
+            if ($Config.password) {
+                $Password = $Config.password
+            }
+        }
+        catch {
+            Write-Warning "无法读取配置文件密码"
+        }
+    }
+
+    if ([string]::IsNullOrEmpty($Password)) {
+        Write-Warning "配置文件无密码，无法启动服务"
+        Write-Info "请手动设置密码后运行: .\run.ps1"
+        return
+    }
+
+    # 启动服务
+    $env:OPENCODE_SERVER_PASSWORD = $Password
+    
+    Write-Info "启动 OpenCode Server..."
+    $LogFile = Join-Path $env:TEMP "opencode.log"
+    
+    # 异步启动
+    Start-Process -FilePath "opencode" -ArgumentList "web","--hostname","0.0.0.0","--port","4096","--mdns","--mdns-domain","opencode.local" -PassThru -WindowStyle Hidden
+    
+    Start-Sleep -Seconds 3
+
+    # 验证启动
+    try {
+        $Response = Invoke-RestMethod -Uri "http://127.0.0.1:4096/health" -TimeoutSec 5 -ErrorAction SilentlyContinue
+        if ($Response) {
+            Write-Success "OpenCode Server 已启动"
+            Write-Host "   访问地址: http://localhost:4096" -ForegroundColor Cyan
+            Write-Host "   配置文件: $ConfigFile" -ForegroundColor Gray
+        }
+    }
+    catch {
+        Write-Warning "服务可能需要更长时间启动"
+        Write-Info "请稍后手动检查: oho global health"
+    }
 }
 
 # ============================================
@@ -474,7 +572,11 @@ function Main {
     $Verified = Test-Install -ExePath $ExePath
     Write-Host ""
 
-    # 7. 显示使用说明
+    # 7. 检测并启动 OpenCode Server
+    Start-OpenCodeServer
+    Write-Host ""
+
+    # 8. 显示使用说明
     Write-Host "==========================================" -ForegroundColor Cyan
     Write-Host "安装完成！" -ForegroundColor Green
     Write-Host "==========================================" -ForegroundColor Cyan

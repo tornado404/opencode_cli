@@ -176,21 +176,71 @@ build_from_source() {
     echo "二进制文件: ${INSTALL_DIR}/${BINARY_NAME}"
 }
 
-# 创建默认配置
 create_config() {
     mkdir -p "$CONFIG_DIR"
     
-    if [ ! -f "${CONFIG_DIR}/config.json" ]; then
+    if [ -f "${CONFIG_DIR}/config.json" ]; then
+        if grep -q '"password":[[:space:]]*""' "${CONFIG_DIR}/config.json" 2>/dev/null; then
+            PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
+            sed -i "s/\"password\": \"\"/\"password\": \"$PASSWORD\"/" "${CONFIG_DIR}/config.json"
+            echo "密码: $PASSWORD"
+        else
+            PASSWORD=$(grep -o '"password"[[:space:]]*:[[:space:]]*"[^"]*"' "${CONFIG_DIR}/config.json" | sed 's/.*"\([^"]*\)".*/\1/')
+        fi
+    else
+        PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
         cat > "${CONFIG_DIR}/config.json" << EOF
 {
   "host": "127.0.0.1",
   "port": 4096,
   "username": "opencode",
-  "password": "",
+  "password": "$PASSWORD",
   "json": false
 }
 EOF
-        echo "${GREEN}配置文件已创建: ${CONFIG_DIR}/config.json${NC}"
+        echo "密码: $PASSWORD"
+    fi
+}
+
+start_opencode_server() {
+    echo "检测 OpenCode Server 服务状态..."
+    
+    if ! command -v opencode &> /dev/null; then
+        if [ -x "${INSTALL_DIR}/oho" ]; then
+            export PATH="${INSTALL_DIR}:$PATH"
+        else
+            return
+        fi
+    fi
+    
+    if curl -s --connect-timeout 3 "http://127.0.0.1:4096/health" > /dev/null 2>&1; then
+        return
+    fi
+    
+    local password=""
+    if [ -f "${CONFIG_DIR}/config.json" ]; then
+        password=$(grep -o '"password"[[:space:]]*:[[:space:]]*"[^"]*"' "${CONFIG_DIR}/config.json" | sed 's/.*"\([^"]*\)".*/\1/')
+    fi
+    
+    if [ -z "$password" ]; then
+        return
+    fi
+    
+    export OPENCODE_SERVER_PASSWORD="$password"
+    
+    local run_script=""
+    if [ -f "/mnt/d/fe/run.sh" ]; then
+        run_script="/mnt/d/fe/run.sh"
+    elif [ -f "./run.sh" ]; then
+        run_script="./run.sh"
+    fi
+    
+    if [ -n "$run_script" ]; then
+        nohup bash "$run_script" > /tmp/opencode.log 2>&1 &
+        sleep 3
+    else
+        nohup opencode web --hostname 0.0.0.0 --port 4096 --mdns --mdns-domain opencode.local > /tmp/opencode.log 2>&1 &
+        sleep 3
     fi
 }
 
@@ -337,6 +387,9 @@ main() {
     
     # 创建配置
     create_config
+    
+    # 检测并启动 OpenCode Server
+    start_opencode_server
     
     # 添加到 PATH
     add_to_path
