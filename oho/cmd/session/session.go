@@ -8,6 +8,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -76,6 +77,7 @@ func init() {
 	Cmd.AddCommand(unrevertCmd)
 	Cmd.AddCommand(permissionsCmd)
 	Cmd.AddCommand(submitCmd)
+	Cmd.AddCommand(achieveCmd)
 
 	// 全局会话标志
 	Cmd.PersistentFlags().StringVarP(&sessionID, "session", "s", "", "会话 ID")
@@ -1117,6 +1119,57 @@ var submitCmd = &cobra.Command{
 	},
 }
 
+// achieveCmd 归档会话
+var achieveCmd = &cobra.Command{
+	Use:   "achieve [id]",
+	Short: "归档会话",
+	Args:  cobra.MaximumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id := sessionID
+		if len(args) > 0 {
+			id = args[0]
+		}
+		if id == "" {
+			return fmt.Errorf("请提供会话 ID 或使用 -s 标志")
+		}
+
+		c := client.NewClient()
+		ctx := context.Background()
+
+		// 获取当前工作目录（如果用户未指定）
+		sessionDir := directory
+		if sessionDir == "" {
+			var err error
+			sessionDir, err = os.Getwd()
+			if err != nil {
+				return fmt.Errorf("failed to get current directory: %w", err)
+			}
+		}
+
+		// 构建请求体：{"time":{"archived":timestamp}}
+		req := map[string]interface{}{
+			"time": map[string]interface{}{
+				"archived": time.Now().UnixMilli(),
+			},
+		}
+
+		// 使用 PatchWithQuery 发送 directory 作为 query 参数
+		queryParams := map[string]string{"directory": sessionDir}
+		resp, err := c.PatchWithQuery(ctx, fmt.Sprintf("/session/%s", id), queryParams, req)
+		if err != nil {
+			return err
+		}
+
+		var session types.Session
+		if err := json.Unmarshal(resp, &session); err != nil {
+			return err
+		}
+
+		fmt.Printf("会话 %s 已归档\n", id)
+		return nil
+	},
+}
+
 func init() {
 	// Add flags for submit command
 	submitCmd.Flags().BoolVar(&initProject, "init-project", false, "Initialize project with AGENTS.md")
@@ -1132,6 +1185,9 @@ func init() {
 	submitCmd.Flags().StringVar(&systemPrompt, "system", "", "System prompt")
 	submitCmd.Flags().StringSliceVar(&tools, "tools", nil, "Tools list (can be specified multiple times)")
 	submitCmd.Flags().StringSliceVar(&files, "file", nil, "File attachments (can be specified multiple times)")
+
+	// achieveCmd flags
+	achieveCmd.Flags().StringVar(&directory, "directory", "", "Working directory for the session")
 }
 
 // detectMimeType 根据文件扩展名检测 MIME 类型
