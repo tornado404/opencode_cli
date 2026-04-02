@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"runtime"
 
 	"github.com/spf13/pflag"
 )
@@ -115,27 +116,39 @@ func Save() error {
 func getConfigSearchPaths() []string {
 	var paths []string
 
-	// 方式1: 操作系统用户数据库中的真实主目录（不受环境变量影响）
+	// 跨平台配置目录: os.UserConfigDir() -> Linux/Mac: ~/.config, Windows: %APPDATA%
+	if configDir, err := os.UserConfigDir(); err == nil && configDir != "" {
+		paths = append(paths, filepath.Join(configDir, "oho", "config.json"))
+	}
+
+	// Windows 专用: LOCALAPPDATA (便携版安装)
+	if runtime.GOOS == "windows" {
+		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
+			paths = append(paths, filepath.Join(localAppData, "oho", "config.json"))
+		}
+	}
+
+	// user.Current()
 	if usr, err := user.Current(); err == nil && usr.HomeDir != "" {
 		paths = append(paths, filepath.Join(usr.HomeDir, ".config", "oho", "config.json"))
 	}
 
-	// 方式2: os.UserHomeDir()（某些情况下会读取 HOME 环境变量）
+	// os.UserHomeDir()
 	if home, err := os.UserHomeDir(); err == nil && home != "" {
 		paths = append(paths, filepath.Join(home, ".config", "oho", "config.json"))
 	}
 
-	// 方式3: $HOME 环境变量
+	// $HOME
 	if home := os.Getenv("HOME"); home != "" {
 		paths = append(paths, filepath.Join(home, ".config", "oho", "config.json"))
 	}
 
-	// 方式4: $USERPROFILE (Windows)
+	// $USERPROFILE
 	if home := os.Getenv("USERPROFILE"); home != "" {
 		paths = append(paths, filepath.Join(home, ".config", "oho", "config.json"))
 	}
 
-	// 方式5: 相对于当前工作目录
+	// 当前目录
 	paths = append(paths, filepath.Join(".", ".config", "oho", "config.json"))
 
 	// 去重
@@ -162,17 +175,31 @@ func findConfigFile() string {
 
 // getConfigPath 获取配置文件路径（用于保存）
 func getConfigPath() string {
-	// 优先使用 os.UserHomeDir() 对应的路径
+	// 使用 os.UserConfigDir() 跨平台获取配置目录
+	// Linux/Mac: ~/.config/oho, Windows: %APPDATA%\oho
+	if configDir, err := os.UserConfigDir(); err == nil && configDir != "" {
+		return filepath.Join(configDir, "oho", "config.json")
+	}
+
+	// fallback: user.Current()
+	if usr, err := user.Current(); err == nil && usr.HomeDir != "" {
+		return filepath.Join(usr.HomeDir, ".config", "oho", "config.json")
+	}
+
+	// fallback: os.UserHomeDir()
 	if home, err := os.UserHomeDir(); err == nil && home != "" {
 		return filepath.Join(home, ".config", "oho", "config.json")
 	}
-	// fallback 到 $HOME
+
+	// fallback: $HOME
 	if home := os.Getenv("HOME"); home != "" {
 		return filepath.Join(home, ".config", "oho", "config.json")
 	}
-	// fallback 到 $USERPROFILE
+
+	// fallback: $USERPROFILE
 	if home := os.Getenv("USERPROFILE"); home != "" {
 		return filepath.Join(home, ".config", "oho", "config.json")
 	}
+
 	return filepath.Join(".", ".config", "oho", "config.json")
 }
