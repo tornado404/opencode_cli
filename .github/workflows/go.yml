@@ -236,26 +236,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # linux-amd64: runs-on ubuntu-latest (x86_64) ✓
           - goos: linux
             goarch: amd64
             runs-on: ubuntu-latest
             artifact: oho-linux-amd64
-          - goos: linux
-            goarch: arm64
-            runs-on: ubuntu-latest
-            artifact: oho-linux-arm64
+          # darwin-amd64: runs-on macos-latest (x86_64) ✓
           - goos: darwin
             goarch: amd64
             runs-on: macos-latest
             artifact: oho-darwin-amd64
-          - goos: darwin
-            goarch: arm64
-            runs-on: macos-latest
-            artifact: oho-darwin-arm64
+          # windows-amd64: runs-on windows-latest ✓
           - goos: windows
             goarch: amd64
             runs-on: windows-latest
             artifact: oho-windows-amd64
+          # darwin-arm64: runs-on macos-latest (macos-13 Intel) 需要单独 runner，暂不支持
+          # linux-arm64: runs-on ubuntu-latest (x86_64) 无法运行 ARM64 二进制，暂不支持
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
