@@ -49,8 +49,7 @@ As a pure Bash implementation, oho can be:
 ### Installation
 
 ```bash
-cd oho
-make build
+curl -sSL https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/install.sh | bash
 ```
 
 ### Basic Usage
