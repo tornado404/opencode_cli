@@ -226,7 +226,61 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   # ===========================================
-  # Job 5: 通知 (发布成功后)
+  # Job 5: 多平台安装脚本测试
+  # ===========================================
+  install-test:
+    name: Install Test (${{ matrix.goos }}-${{ matrix.goarch }})
+    runs-on: ${{ matrix.runs-on }}
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            runs-on: ubuntu-latest
+            artifact: ${{ env.APP_NAME }}-linux-amd64
+          - goos: linux
+            goarch: arm64
+            runs-on: ubuntu-latest
+            artifact: ${{ env.APP_NAME }}-linux-arm64
+          - goos: darwin
+            goarch: amd64
+            runs-on: macos-latest
+            artifact: ${{ env.APP_NAME }}-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            runs-on: macos-latest
+            artifact: ${{ env.APP_NAME }}-darwin-arm64
+          - goos: windows
+            goarch: amd64
+            runs-on: windows-latest
+            artifact: ${{ env.APP_NAME }}-windows-amd64
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ./bin
+
+      - name: Verify Linux/macOS binary
+        if: matrix.goos != 'windows'
+        run: |
+          bin_path="./bin/${{ matrix.artifact }}"
+          chmod +x "$bin_path"
+          echo "Testing: $bin_path"
+          "$bin_path" --version
+
+      - name: Verify Windows binary
+        if: matrix.goos == 'windows'
+        shell: pwsh
+        run: |
+          $bin = ".\bin\${{ matrix.artifact }}.exe"
+          echo "Testing: $bin"
+          & $bin --version
+
+  # ===========================================
+  # Job 6: 通知 (发布成功后)
   # ===========================================
   notify:
     name: Notify

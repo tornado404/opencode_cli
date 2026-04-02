@@ -156,7 +156,9 @@ function Download-Binary {
     Write-Info "准备下载 oho..."
 
     # 构建下载 URL
-    $DownloadUrl = "https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$Version/$BINARY_NAME-windows-$Arch.zip"
+    # Windows 资产是 .exe 格式（直接可执行文件），其他平台是普通二进制文件
+    $OsSuffix = if ($true) { "windows" }  # 始终为 windows，因为此脚本仅用于 Windows
+    $DownloadUrl = "https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$Version/$BINARY_NAME-$OsSuffix-$Arch.exe"
 
     Write-Info "下载 URL: $DownloadUrl"
 
@@ -164,32 +166,21 @@ function Download-Binary {
     $TempDir = Join-Path $env:TEMP "oho_install_$(Get-Random)"
     New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
 
-    $ZipFile = Join-Path $TempDir "oho.zip"
+    $ExeFile = Join-Path $TempDir "oho.exe"
 
     try {
         # 下载文件
         Write-Info "下载中..."
 
-        # 使用 WebClient 支持进度
+        # 使用 WebClient 下载
         $WebClient = New-Object System.Net.WebClient
-        $WebClient.DownloadFile($DownloadUrl, $ZipFile)
+        $WebClient.DownloadFile($DownloadUrl, $ExeFile)
 
-        if (-not (Test-Path $ZipFile)) {
+        if (-not (Test-Path $ExeFile)) {
             throw "下载失败"
         }
 
         Write-Success "下载完成"
-
-        # 解压
-        Write-Info "解压中..."
-        Expand-Archive -Path $ZipFile -DestinationPath $TempDir -Force
-
-        # 查找解压后的 oho.exe
-        $ExtractedExe = Get-ChildItem -Path $TempDir -Filter "*.exe" -Recurse | Select-Object -First 1
-
-        if ($null -eq $ExtractedExe) {
-            throw "解压后未找到 oho.exe"
-        }
 
         # 创建安装目录
         if (-not (Test-Path $InstallDir)) {
@@ -198,7 +189,7 @@ function Download-Binary {
 
         # 移动到安装目录
         $TargetPath = Join-Path $InstallDir "oho.exe"
-        Copy-Item -Path $ExtractedExe.FullName -Destination $TargetPath -Force
+        Copy-Item -Path $ExeFile -Destination $TargetPath -Force
 
         Write-Success "安装完成: $TargetPath"
         return $TargetPath
