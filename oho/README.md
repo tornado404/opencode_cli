@@ -185,6 +185,9 @@ oho session get <id>                  # Get session details
 oho session delete <id>               # Delete session
 oho session update <id> --title "New Title"  # Update session
 oho session children <id>             # Get child sessions
+oho session submit "task"             # Submit task (create session + send message in one step)
+oho session submit "task" --init-project --provider openai --model gpt-4  # Submit with project init
+oho session achieve <id>             # Archive session
 oho session todo <id>                 # Get todo items
 oho session fork <id>                 # Fork session
 oho session abort <id>                # Abort session
@@ -214,6 +217,22 @@ oho session permissions <id> <perm-id> --response allow  # Respond to permission
 | `--limit` | int | Limit results count | - |
 | `--offset` | int | Pagination offset | 0 |
 | `-j, --json` | bool | JSON output format | false |
+
+**`session submit` Command Flags**:
+
+| Flag | Type | Description | Default |
+|------|------|-------------|---------|
+| `--init-project` | bool | Initialize project with AGENTS.md | false |
+| `--provider` | string | Provider ID for initialization | - |
+| `--model` | string | Model ID for initialization | - |
+| `--title` | string | Session title | auto |
+| `--directory` | string | Working directory | current directory |
+| `--agent` | string | Agent ID for message | - |
+| `--message-model` | string | Model ID for message | - |
+| `--no-reply` | bool | Don't wait for AI response | false |
+| `--system` | string | System prompt | - |
+| `--tools` | string[] | Tools list | - |
+| `--file` | string[] | File attachments | - |
 
 ### Message Management
 
