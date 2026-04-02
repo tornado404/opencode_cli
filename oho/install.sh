@@ -13,11 +13,11 @@ BINARY_NAME="oho"
 INSTALL_DIR="${HOME}/.local/bin"
 CONFIG_DIR="${HOME}/.config/oho"
 
-# 颜色定义
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# 颜色定义 (使用 $'...' 语法使 ANSI 转义序列生效)
+RED=$'\033[0;31m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[1;33m'
+NC=$'\033[0m' # No Color
 
 # 获取最新版本
 get_latest_version() {
