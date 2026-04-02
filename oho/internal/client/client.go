@@ -38,9 +38,9 @@ func NewClient() *Client {
 	}
 
 	return &Client{
-		baseURL:  config.GetBaseURL(),
-		username: cfg.Username,
-		password: cfg.Password,
+		baseURL:    config.GetBaseURL(),
+		username:   cfg.Username,
+		password:   cfg.Password,
 		timeoutSec: timeoutSec,
 		httpClient: &http.Client{
 			Timeout: time.Duration(timeoutSec) * time.Second,
@@ -154,6 +154,11 @@ func (c *Client) Put(ctx context.Context, path string, body interface{}) ([]byte
 // Patch 发送 PATCH 请求
 func (c *Client) Patch(ctx context.Context, path string, body interface{}) ([]byte, error) {
 	return c.Request(ctx, http.MethodPatch, path, body)
+}
+
+// PatchWithQuery 发送带查询参数的 PATCH 请求
+func (c *Client) PatchWithQuery(ctx context.Context, path string, queryParams map[string]string, body interface{}) ([]byte, error) {
+	return c.RequestWithQuery(ctx, http.MethodPatch, path, queryParams, body)
 }
 
 // Delete 发送 DELETE 请求

@@ -11,6 +11,7 @@ type ClientInterface interface {
 	Post(ctx context.Context, path string, body interface{}) ([]byte, error)
 	Put(ctx context.Context, path string, body interface{}) ([]byte, error)
 	Patch(ctx context.Context, path string, body interface{}) ([]byte, error)
+	PatchWithQuery(ctx context.Context, path string, queryParams map[string]string, body interface{}) ([]byte, error)
 	Delete(ctx context.Context, path string) ([]byte, error)
 	PostWithQuery(ctx context.Context, path string, queryParams map[string]string, body interface{}) ([]byte, error)
 	SSEStream(ctx context.Context, path string) (<-chan []byte, <-chan error, error)
