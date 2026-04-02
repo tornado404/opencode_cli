@@ -21,19 +21,21 @@ NC='\033[0m' # No Color
 
 # 获取最新版本
 get_latest_version() {
+    local version=""
+    
     # 尝试从 GitHub API 获取最新 release
     if command -v curl &> /dev/null; then
-        VERSION=$(curl -sSL https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest 2>/dev/null | grep -o '"tag_name":.*' | cut -d'"' -f4 || echo "")
+        version=$(curl -sSL https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest 2>/dev/null | grep -o '"tag_name":.*' | cut -d'"' -f4 | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || echo "")
     elif command -v wget &> /dev/null; then
-        VERSION=$(wget -qO- https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest 2>/dev/null | grep -o '"tag_name":.*' | cut -d'"' -f4 || echo "")
+        version=$(wget -qO- https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest 2>/dev/null | grep -o '"tag_name":.*' | cut -d'"' -f4 | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || echo "")
     fi
     
-    if [ -z "$VERSION" ]; then
+    if [ -z "$version" ]; then
         echo "${YELLOW}无法获取最新版本，将从源码编译${NC}"
-        VERSION="build-from-source"
+        version="build-from-source"
     fi
     
-    echo "$VERSION"
+    echo "$version"
 }
 
 # 检测操作系统和架构
@@ -119,7 +121,7 @@ build_from_source() {
     fi
     
     # 检查 Go 版本
-    GO_VERSION=$(go version | grep -oP 'go\K[0-9]+\.[0-9]+')
+    GO_VERSION=$(go version 2>/dev/null | grep -oE 'go[0-9]+\.[0-9]+' | grep -oE '[0-9]+\.[0-9]+$')
     GO_MAJOR=$(echo "$GO_VERSION" | cut -d. -f1)
     GO_MINOR=$(echo "$GO_VERSION" | cut -d. -f2)
     
@@ -304,7 +306,7 @@ main() {
     echo ""
     
     # 尝试下载或编译
-    if [ "$force_source" = true ]; then
+    if [ "$force_source" = true ] || [ "$version" = "build-from-source" ]; then
         build_from_source
     else
         os_arch=$(detect_os_arch)
