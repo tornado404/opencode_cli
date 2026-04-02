@@ -239,23 +239,23 @@ jobs:
           - goos: linux
             goarch: amd64
             runs-on: ubuntu-latest
-            artifact: ${{ env.APP_NAME }}-linux-amd64
+            artifact: oho-linux-amd64
           - goos: linux
             goarch: arm64
             runs-on: ubuntu-latest
-            artifact: ${{ env.APP_NAME }}-linux-arm64
+            artifact: oho-linux-arm64
           - goos: darwin
             goarch: amd64
             runs-on: macos-latest
-            artifact: ${{ env.APP_NAME }}-darwin-amd64
+            artifact: oho-darwin-amd64
           - goos: darwin
             goarch: arm64
             runs-on: macos-latest
-            artifact: ${{ env.APP_NAME }}-darwin-arm64
+            artifact: oho-darwin-arm64
           - goos: windows
             goarch: amd64
             runs-on: windows-latest
-            artifact: ${{ env.APP_NAME }}-windows-amd64
+            artifact: oho-windows-amd64
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
