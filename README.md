@@ -52,6 +52,38 @@ As a pure Bash implementation, oho can be:
 curl -sSL https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/install.sh | bash
 ```
 
+### Windows Installation
+
+**PowerShell (Recommended)**
+
+Run the following in PowerShell (requires PowerShell 5.1+):
+
+```powershell
+irm https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/install.ps1 | iex
+```
+
+Or download the installer from [GitHub Releases](https://github.com/tornado404/opencode_cli/releases).
+
+**Manual Installation**
+
+1. Download the latest release from [GitHub Releases](https://github.com/tornado404/opencode_cli/releases)
+2. Choose `oho-windows-amd64.exe` or `oho-windows-arm64.exe` based on your architecture
+3. Add the downloaded binary to your PATH
+
+**Configuration**
+
+The configuration file is located at: `%APPDATA%\oho\config.json`
+
+```json
+{
+  "host": "127.0.0.1",
+  "port": 4096,
+  "username": "opencode",
+  "password": "",
+  "json": false
+}
+```
+
 ### Basic Usage
 
 ```bash
@@ -78,6 +110,18 @@ oho message add -s <session-id> "Continue the previous task"
 # Destroy session
 oho session delete <session-id>
 ```
+
+### Environment Variables (Windows)
+
+On Windows, you can set environment variables via PowerShell:
+
+```powershell
+$env:OPENCODE_SERVER_HOST = "127.0.0.1"
+$env:OPENCODE_SERVER_PORT = "4096"
+$env:OPENCODE_SERVER_PASSWORD = "your-password"
+```
+
+Or use System Properties > Environment Variables.
 
 ## Comparison with Other Ecosystem Projects
 

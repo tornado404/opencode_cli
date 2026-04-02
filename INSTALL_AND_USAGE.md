@@ -59,6 +59,28 @@ go build -o ~/.local/bin/oho ./cmd
 sudo go build -o /usr/local/bin/oho ./cmd
 ```
 
+### Windows 安装
+
+#### PowerShell 安装（推荐）
+
+```powershell
+# 下载并执行安装脚本
+irm https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/install.ps1 | iex
+```
+
+或手动下载 [GitHub Releases](https://github.com/tornado404/opencode_cli/releases) 中的预编译二进制。
+
+#### 从源码编译
+
+```powershell
+cd $env:TEMP
+git clone --depth 1 https://github.com/tornado404/opencode_cli.git
+cd opencode_cli/oho
+go build -o $env:LOCALAPPDATA\Programs\oho\oho.exe ./cmd
+```
+
+需要 Go 1.21+。
+
 ### 验证安装
 
 ```bash
@@ -89,20 +111,44 @@ export OPENCODE_CLIENT_TIMEOUT=600  # 10 分钟
 
 ### 永久配置（推荐）
 
+**Unix/Linux/macOS:**
+
 将以下内容添加到 `~/.bashrc` 或 `~/.zshrc`：
 
 ```bash
-# OpenCode oho CLI 配置
 export OPENCODE_SERVER_HOST=127.0.0.1
 export OPENCODE_SERVER_PORT=4096
 export OPENCODE_SERVER_PASSWORD=your-password
 export OPENCODE_CLIENT_TIMEOUT=600
 ```
 
-然后执行：
-```bash
-source ~/.bashrc  # 或 source ~/.zshrc
+**Windows PowerShell:**
+
+将以下内容添加到 `$PROFILE`（PowerShell 配置文件）：
+
+```powershell
+$env:OPENCODE_SERVER_HOST = "127.0.0.1"
+$env:OPENCODE_SERVER_PORT = "4096"
+$env:OPENCODE_SERVER_PASSWORD = "your-password"
+$env:OPENCODE_CLIENT_TIMEOUT = "600"
 ```
+
+要查找/编辑 PowerShell 配置文件，运行：
+```powershell
+notepad $PROFILE
+```
+
+然后执行：
+```powershell
+. $PROFILE
+```
+
+**配置文件位置:**
+
+| 平台 | 配置文件路径 |
+|------|-------------|
+| Linux/macOS | `~/.config/oho/config.json` |
+| Windows | `%APPDATA%\oho\config.json` |
 
 ---
 

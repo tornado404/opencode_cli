@@ -48,6 +48,38 @@ oho 基于 OpenCode REST API 构建，提供完整的命令行接口：
 curl -sSL https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/install.sh | bash
 ```
 
+### Windows 安装
+
+**PowerShell（推荐）**
+
+在 PowerShell 中运行以下命令（需要 PowerShell 5.1+）：
+
+```powershell
+irm https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/install.ps1 | iex
+```
+
+或从 [GitHub Releases](https://github.com/tornado404/opencode_cli/releases) 下载安装程序。
+
+**手动安装**
+
+1. 从 [GitHub Releases](https://github.com/tornado404/opencode_cli/releases) 下载最新版本
+2. 根据您的架构选择 `oho-windows-amd64.exe` 或 `oho-windows-arm64.exe`
+3. 将下载的二进制文件添加到 PATH
+
+**配置文件**
+
+配置文件位于: `%APPDATA%\oho\config.json`
+
+```json
+{
+  "host": "127.0.0.1",
+  "port": 4096,
+  "username": "opencode",
+  "password": "",
+  "json": false
+}
+```
+
 ### 基本用法
 
 ```bash
@@ -55,6 +87,19 @@ curl -sSL https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/i
 export OPENCODE_SERVER_HOST=127.0.0.1
 export OPENCODE_SERVER_PORT=4096
 export OPENCODE_SERVER_PASSWORD=your-password
+```
+
+### Windows 环境变量设置
+
+在 PowerShell 中设置环境变量：
+
+```powershell
+$env:OPENCODE_SERVER_HOST = "127.0.0.1"
+$env:OPENCODE_SERVER_PORT = "4096"
+$env:OPENCODE_SERVER_PASSWORD = "your-password"
+```
+
+或通过"系统属性" > "环境变量"进行设置。
 
 # 列出所有会话
 oho session list
