@@ -45,8 +45,7 @@ oho 基于 OpenCode REST API 构建，提供完整的命令行接口：
 ### 安装
 
 ```bash
-cd oho
-make build
+curl -sSL https://raw.githubusercontent.com/tornado404/opencode_cli/master/oho/install.sh | bash
 ```
 
 ### 基本用法
